@@ -1,5 +1,5 @@
 using LinearProgrammingSolver.Models;
-using LinearProgrammingSolver.Iterations;
+// using LinearProgrammingSolver.Iterations; // Commented out - missing namespace
 
 namespace LinearProgrammingSolver.Utils
 {
@@ -16,11 +16,11 @@ namespace LinearProgrammingSolver.Utils
             // Write canonical form of the problem to file
         }
 
-        private void WriteIterations(List<IIteration> iterations, StreamWriter writer)
-        {
-            // Write all algorithm iterations to file
-            // Handle different iteration types appropriately
-        }
+        // private void WriteIterations(List<IIteration> iterations, StreamWriter writer) // Commented out - missing interface
+        // {
+        //     // Write all algorithm iterations to file
+        //     // Handle different iteration types appropriately
+        // }
 
         private void WriteSolutionSummary(SolutionResult result, StreamWriter writer)
         {
@@ -33,14 +33,14 @@ namespace LinearProgrammingSolver.Utils
             // Format decimal to 3 places as required by project specs
         }
 
-        private void WriteTableauIteration(TableauIteration iteration, StreamWriter writer)
-        {
-            // Write tableau iteration details including matrix
-        }
+        // private void WriteTableauIteration(TableauIteration iteration, StreamWriter writer) // Commented out - missing class
+        // {
+        //     // Write tableau iteration details including matrix
+        // }
 
-        private void WriteRevisedIteration(RevisedIteration iteration, StreamWriter writer)
-        {
-            // Write revised iteration details including basis inverse
-        }
+        // private void WriteRevisedIteration(RevisedIteration iteration, StreamWriter writer) // Commented out - missing class
+        // {
+        //     // Write revised iteration details including basis inverse
+        // }
     }
 }

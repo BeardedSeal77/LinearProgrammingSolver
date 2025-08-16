@@ -1,8 +1,7 @@
-using LinearProgrammingSolver.Models;
 using LinearProgrammingSolver.Utils;
 using LinearProgrammingSolver.Tables;
-using LinearProgrammingSolver.LPAlgorithms;
-using LinearProgrammingSolver.IPAlgorithms;
+// using LinearProgrammingSolver.LPAlgorithms;
+// using LinearProgrammingSolver.IPAlgorithms;
 
 namespace LinearProgrammingSolver
 {
@@ -10,12 +9,46 @@ namespace LinearProgrammingSolver
     {
         static void Main(string[] args)
         {
-            // Main entry point for Linear Programming Solver
-            // Display welcome message and start application
-            // Handle any top-level exceptions gracefully
+            Console.WriteLine("=== Linear Programming Solver ===");
+            Console.WriteLine();
+            
+            try
+            {
+                // Use FileReader to parse input file and create Table
+                var fileReader = new FileReader();
+                
+                // Use robust path resolution that works from any working directory
+                string currentDir = Directory.GetCurrentDirectory();
+                string projectDir = currentDir;
+                
+                // If running from debugger, find the project directory
+                while (!File.Exists(Path.Combine(projectDir, "data", "input.txt")) && 
+                       Directory.GetParent(projectDir) != null)
+                {
+                    projectDir = Directory.GetParent(projectDir).FullName;
+                }
+                
+                string inputPath = Path.Combine(projectDir, "data", "input.txt");
+                Console.WriteLine($"Reading and parsing file: {inputPath}");
+                
+                var table = fileReader.ReadTableFromFile(inputPath);
+                
+                // Display the parsed table in traditional format
+                table.Display();
+                
+                // Display the same table in math preliminary format
+                table.DisplayMathPrelim();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+            
+            Console.WriteLine("\nProgram completed.");
         }
     }
 
+    /*
     public class LinearProgrammingSolverApp
     {
         private LinearProgrammingModel _model;
@@ -114,7 +147,9 @@ namespace LinearProgrammingSolver
             // Include canonical form and all iterations
         }
     }
+    */
 
+    /*
     public enum LPAlgorithmType
     {
         PrimalSimplex,
@@ -127,4 +162,5 @@ namespace LinearProgrammingSolver
         BranchAndBoundKnapsack,
         CuttingPlane
     }
+    */
 }

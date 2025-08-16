@@ -1,15 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
     <Folder Include="public\" />
+    <Compile Remove="LPAlgorithms/**" />
+    <Compile Remove="IPAlgorithms/**" />
+    <Compile Remove="Models/**" />
+    <Compile Remove="Utils/FileWriter.cs" />
+    <Compile Remove="Utils/PivotingOperations.cs" />
+    <Compile Remove="Tables/BranchAndBoundTable.cs" />
+    <Compile Remove="Form1.cs" />
+    <Compile Remove="Form1.Designer.cs" />
   </ItemGroup>
 
 </Project>

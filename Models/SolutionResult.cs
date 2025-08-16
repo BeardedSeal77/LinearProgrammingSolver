@@ -1,4 +1,4 @@
-using LinearProgrammingSolver.Iterations;
+// using LinearProgrammingSolver.Iterations; // Commented out - missing namespace
 
 namespace LinearProgrammingSolver.Models
 {
@@ -8,7 +8,7 @@ namespace LinearProgrammingSolver.Models
         public SolutionStatus Status { get; set; }
         public double OptimalValue { get; set; }
         public List<double> OptimalSolution { get; set; }
-        public List<IIteration> Iterations { get; set; }
+        // public List<IIteration> Iterations { get; set; } // Commented out - missing interface
         public TimeSpan SolutionTime { get; set; }
         public string AlgorithmUsed { get; set; }
         public string ErrorMessage { get; set; }

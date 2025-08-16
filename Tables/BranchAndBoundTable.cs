@@ -41,7 +41,7 @@ namespace LinearProgrammingSolver.Tables
             // Return variable index for branching
         }
 
-        public override void Display()
+        public new void Display()
         {
             // Display branch and bound specific information
             // Include parent/child relationships and branching constraints
