@@ -14,8 +14,12 @@ namespace LinearProgrammingSolver
             
             try
             {
-                // Use FileReader to parse input file and create Table
+                // Clear any existing tables from previous runs
+                TableCache.ClearAllTables();
+                
+                // Star/Tree Topology: Program.cs coordinates all object creation
                 var fileReader = new FileReader();
+                var canonicalConverter = new CanonicalFormConverter();
                 
                 // Use robust path resolution that works from any working directory
                 string currentDir = Directory.GetCurrentDirectory();
@@ -29,15 +33,29 @@ namespace LinearProgrammingSolver
                 }
                 
                 string inputPath = Path.Combine(projectDir, "data", "input.txt");
-                Console.WriteLine($"Reading and parsing file: {inputPath}");
+                Console.WriteLine($"Processing: {inputPath}");
                 
-                var table = fileReader.ReadTableFromFile(inputPath);
+                // Step 1: FileReader ONLY parses (no table construction)
+                var (matrix, rowLabels, columnLabels, optimizationType, constraintOperators) = fileReader.ParseFile(inputPath);
                 
-                // Display the parsed table in traditional format
-                table.Display();
+                // Step 2: Program.cs constructs Table object
+                var rawTable = new Table("t-raw", matrix, rowLabels, columnLabels, optimizationType, "Raw", constraintOperators);
                 
-                // Display the same table in math preliminary format
-                table.DisplayMathPrelim();
+                // Step 3: Program.cs stores Table in cache
+                TableCache.StoreTable(rawTable);
+                Console.WriteLine("✓ Raw table created and cached");
+                
+                // Convert to canonical form (same star pattern)
+                var canonicalTable = canonicalConverter.ConvertToCanonicalForm(rawTable);
+                TableCache.StoreTable(canonicalTable);
+                Console.WriteLine("✓ Canonical table created and cached");
+                
+                // Display final summary of all cached tables
+                Console.WriteLine();
+                TableCache.DisplayTableSummary();
+                
+                // Uncomment the line below to see detailed view of all tables:
+                TableCache.DisplayAllTablesDetailed();
             }
             catch (Exception ex)
             {
@@ -47,120 +65,4 @@ namespace LinearProgrammingSolver
             Console.WriteLine("\nProgram completed.");
         }
     }
-
-    /*
-    public class LinearProgrammingSolverApp
-    {
-        private LinearProgrammingModel _model;
-        private FileReader _fileReader;
-        private FileWriter _fileWriter;
-        private List<Table> _allTables;
-        private Table _currentTable;
-        private Table _lpOptimalTable;
-
-        // Algorithm instances
-        private PrimalSimplexAlgorithm _primalSimplex;
-        private RevisedSimplexAlgorithm _revisedSimplex;
-        private BranchAndBoundAlgorithm _branchAndBound;
-        private BranchAndBoundKnapsackAlgorithm _branchAndBoundKnapsack;
-        private CuttingPlaneAlgorithm _cuttingPlane;
-
-        public LinearProgrammingSolverApp()
-        {
-            // Initialize application with file I/O utilities
-            // Create algorithm instances
-            // Initialize table collections
-        }
-
-        public void Run()
-        {
-            // Start the main application loop
-        }
-
-        private void ShowMainMenu()
-        {
-            // Display main menu and handle user choices
-            // 1. Load Model from File
-            // 2. Solve LP (Primal or Revised Simplex)
-            // 3. Solve IP (Branch & Bound or Cutting Plane)
-            // 4. Display All Tables
-            // 5. Export Results
-            // 6. Exit
-        }
-
-        private void LoadModelFromFile()
-        {
-            // Get file path from user input
-            // Use FileReader to parse input file
-            // Create initial canonical form table (t-i)
-        }
-
-        private void SolveLP()
-        {
-            // Show LP algorithm selection menu (Primal vs Revised Simplex)
-            // Solve LP starting from t-i to get t-optimal
-            // Store LP optimal solution for IP algorithms
-        }
-
-        private void SolveIP()
-        {
-            // Show IP algorithm selection menu
-            // Start from LP optimal and solve IP
-            // Create branch and bound tables (t-1.1, t-1.2, etc.)
-        }
-
-        private void SolvePrimalSimplex()
-        {
-            // Solve using Primal Simplex: t-i → t-1 → t-2 → ... → t-optimal
-        }
-
-        private void SolveRevisedSimplex()
-        {
-            // Solve using Revised Simplex: t-i → t-rev-1 → t-rev-2 → ... → t-optimal
-        }
-
-        private void SolveBranchAndBound()
-        {
-            // Solve using Branch & Bound: t-optimal → t-1.1, t-1.2 → t-1.1.1, t-1.1.2, etc.
-        }
-
-        private void SolveBranchAndBoundKnapsack()
-        {
-            // Solve using Branch & Bound Knapsack algorithm
-        }
-
-        private void SolveCuttingPlane()
-        {
-            // Solve using Cutting Plane: t-optimal → t-cut-1 → t-cut-2 → ... → t-optimal-ip
-        }
-
-        private void DisplayAllTables()
-        {
-            // Display all tables created during solution process
-            // Show progression: t-i → t-1 → t-optimal → t-1.1, t-1.2, etc.
-        }
-
-        private void ExportResults()
-        {
-            // Get output file path from user
-            // Use FileWriter to export all tables and results
-            // Include canonical form and all iterations
-        }
-    }
-    */
-
-    /*
-    public enum LPAlgorithmType
-    {
-        PrimalSimplex,
-        RevisedSimplex
-    }
-
-    public enum IPAlgorithmType
-    {
-        BranchAndBoundSimplex,
-        BranchAndBoundKnapsack,
-        CuttingPlane
-    }
-    */
 }

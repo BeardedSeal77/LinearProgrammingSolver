@@ -4,14 +4,16 @@ using System.IO;
 namespace LinearProgrammingSolver.Utils
 {
     /// <summary>
-    /// Utility class for parsing LP model files into Table objects.
+    /// Utility class for parsing LP model files into raw data components.
+    /// Returns parsed data for table construction - does NOT create Table objects.
     /// </summary>
     public class FileReader
     {
         /// <summary>
-        /// Parses LP model from text file and creates raw Table object.
+        /// Parses LP model from text file and returns raw data components.
+        /// Returns tuple of (matrix, rowLabels, columnLabels, optimizationType, constraintOperators) for table construction.
         /// </summary>
-        public Table ReadTableFromFile(string filePath)
+        public (double[,] matrix, List<string> rowLabels, List<string> columnLabels, OptimizationType optimizationType, Dictionary<string, ConstraintOperator> constraintOperators) ParseFile(string filePath)
         {
             // Validate file exists and has minimum required structure
             if (!ValidateInputFile(filePath))
@@ -34,11 +36,11 @@ namespace LinearProgrammingSolver.Utils
             // Parse last line: variable constraints (bin, int, +, -, urs)
             var variableConstraints = ParseVariableConstraints(lines[lines.Length - 1]);
 
-            // Create Table object
-            var table = CreateRawTable(optimizationType, objectiveCoefficients, constraintData, variableConstraints);
+            // Create raw data components for table construction
+            var (matrix, rowLabels, columnLabels, constraintOperators) = CreateRawData(optimizationType, objectiveCoefficients, constraintData, variableConstraints);
 
-            // Returns: Table object with "t-raw" structure
-            return table;
+            // Returns: Raw data components for Program.cs to construct Table
+            return (matrix, rowLabels, columnLabels, optimizationType, constraintOperators);
         }
 
         /// <summary>
@@ -163,9 +165,10 @@ namespace LinearProgrammingSolver.Utils
         }
         
         /// <summary>
-        /// Creates raw Table object from parsed data.
+        /// Creates raw data components from parsed data for table construction.
+        /// Returns matrix, row labels, column labels, and constraint operators - does NOT create Table object.
         /// </summary>
-        private Table CreateRawTable(OptimizationType optimizationType, List<double> objectiveCoefficients, 
+        private (double[,] matrix, List<string> rowLabels, List<string> columnLabels, Dictionary<string, ConstraintOperator> constraintOperators) CreateRawData(OptimizationType optimizationType, List<double> objectiveCoefficients, 
                                     List<(List<double> coefficients, double rhs, ConstraintOperator op)> constraintData, 
                                     List<VariableConstraint> variableConstraints)
         {
@@ -210,44 +213,15 @@ namespace LinearProgrammingSolver.Utils
             }
             columnLabels.Add("RHS");
             
-            var columnTypes = new List<VariableType>();
-            for (int i = 0; i < variableCount; i++)
-            {
-                columnTypes.Add(VariableType.Decision);
-            }
-            columnTypes.Add(VariableType.RHS);
-            
-            // Convert lists to dictionaries for better mapping
-            var variableConstraintsDict = new Dictionary<string, VariableConstraint>();
-            for (int i = 0; i < Math.Min(variableConstraints.Count, variableCount); i++)
-            {
-                variableConstraintsDict[$"x{i + 1}"] = variableConstraints[i];
-            }
-            
-            var constraintOperatorsDict = new Dictionary<string, ConstraintOperator>();
+            // Create constraint operators dictionary
+            var constraintOperators = new Dictionary<string, ConstraintOperator>();
             for (int i = 0; i < constraintOperatorsList.Count; i++)
             {
-                constraintOperatorsDict[$"C{i + 1}"] = constraintOperatorsList[i];
+                constraintOperators[$"C{i + 1}"] = constraintOperatorsList[i];
             }
             
-            // Create and return Table
-            var table = new Table("t-raw", "Raw")
-            {
-                Matrix = matrix,
-                RowLabels = rowLabels,
-                ColumnLabels = columnLabels,
-                ColumnTypes = columnTypes,
-                OptimizationType = optimizationType,
-                VariableConstraints = variableConstraintsDict,
-                ConstraintOperators = constraintOperatorsDict,
-                BasicVariables = new List<string>(), // No basic variables in raw table
-                Status = "Parsed",
-                Description = "Raw input table from file",
-                CreatedTime = DateTime.Now
-            };
-            
-            // Returns: Table object with "t-raw" structure and all parsed data
-            return table;
+            // Returns: Raw data components for table construction
+            return (matrix, rowLabels, columnLabels, constraintOperators);
         }
         
         /// <summary>

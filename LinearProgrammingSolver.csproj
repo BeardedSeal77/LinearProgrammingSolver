@@ -15,8 +15,6 @@
     <Compile Remove="Utils/FileWriter.cs" />
     <Compile Remove="Utils/PivotingOperations.cs" />
     <Compile Remove="Tables/BranchAndBoundTable.cs" />
-    <Compile Remove="Form1.cs" />
-    <Compile Remove="Form1.Designer.cs" />
   </ItemGroup>
 
 </Project>
