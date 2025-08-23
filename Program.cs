@@ -45,11 +45,14 @@ namespace LinearProgrammingSolver
                 TableCache.StoreTable(rawTable);
                 Console.WriteLine("✓ Raw table created and cached");
                 
-                // Convert to canonical form (same star pattern)
+                // Step 4: Convert to canonical form (same star pattern)
                 var canonicalTable = canonicalConverter.ConvertToCanonicalForm(rawTable);
-                TableCache.StoreTable(canonicalTable);
+                TableCache.StoreTable(canonicalTable); //table type "t-i"
                 Console.WriteLine("✓ Canonical table created and cached");
                 
+                // Step 5: Primal Simplex
+
+
                 // Display final summary of all cached tables
                 Console.WriteLine();
                 TableCache.DisplayTableSummary();
