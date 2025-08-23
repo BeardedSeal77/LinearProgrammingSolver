@@ -210,17 +210,17 @@ namespace LinearProgrammingSolver.Tables
                         // Add operator column before RHS
                         string operatorSymbol = GetConstraintOperatorSymbol(rowLabel);
                         Console.Write($"{operatorSymbol,4}");
-                        Console.Write($"{Matrix[i, j],8:F2}");
+                        Console.Write($"{Matrix[i, j],8:F3}");
                     }
                     else
                     {
-                        Console.Write($"{Matrix[i, j],8:F2}");
+                        Console.Write($"{Matrix[i, j],8:F3}");
                     }
                 }
                 Console.WriteLine();
             }
             
-            Console.WriteLine($"Objective Value: {GetObjectiveValue():F2}");
+            Console.WriteLine($"Objective Value: {GetObjectiveValue():F3}");
         }
         
         // Display table in mathematical matrix decomposition format
@@ -263,7 +263,7 @@ namespace LinearProgrammingSolver.Tables
                     Console.Write($"{ColumnLabels[basicIndices[j]],6} |");
                     for (int i = 1; i <= constraintCount; i++)
                     {
-                        Console.Write($"{Matrix[i, basicIndices[j]],8:F2}");
+                        Console.Write($"{Matrix[i, basicIndices[j]],8:F3}");
                     }
                     Console.WriteLine();
                 }
@@ -282,7 +282,7 @@ namespace LinearProgrammingSolver.Tables
                     Console.Write($"{ColumnLabels[nonBasicIndices[j]],6} |");
                     for (int i = 1; i <= constraintCount; i++)
                     {
-                        Console.Write($"{Matrix[i, nonBasicIndices[j]],8:F2}");
+                        Console.Write($"{Matrix[i, nonBasicIndices[j]],8:F3}");
                     }
                     Console.WriteLine();
                 }
@@ -298,7 +298,7 @@ namespace LinearProgrammingSolver.Tables
             for (int i = 1; i <= constraintCount; i++)
             {
                 string constraintLabel = i - 1 < RowLabels.Count - 1 ? RowLabels[i] : $"C{i}";
-                Console.WriteLine($"  {constraintLabel}: {Matrix[i, rhsCol]:F2}");
+                Console.WriteLine($"  {constraintLabel}: {Matrix[i, rhsCol]:F3}");
             }
             
             // Display Costs
@@ -306,13 +306,13 @@ namespace LinearProgrammingSolver.Tables
             Console.WriteLine("Basic Costs (Cb):");
             foreach (int idx in basicIndices)
             {
-                Console.WriteLine($"  {ColumnLabels[idx]}: {Matrix[0, idx]:F2}");
+                Console.WriteLine($"  {ColumnLabels[idx]}: {Matrix[0, idx]:F3}");
             }
             
             Console.WriteLine("Non-Basic Costs (Cnb):");
             foreach (int idx in nonBasicIndices)
             {
-                Console.WriteLine($"  {ColumnLabels[idx]}: {Matrix[0, idx]:F2}");
+                Console.WriteLine($"  {ColumnLabels[idx]}: {Matrix[0, idx]:F3}");
             }
         }
         

@@ -1,6 +1,9 @@
+using System;
+using System.IO;
+using System.Collections.Generic;
 using LinearProgrammingSolver.Utils;
 using LinearProgrammingSolver.Tables;
-// using LinearProgrammingSolver.LPAlgorithms;
+//using LinearProgrammingSolver.LPAlgorithms;
 // using LinearProgrammingSolver.IPAlgorithms;
 
 namespace LinearProgrammingSolver
@@ -49,10 +52,35 @@ namespace LinearProgrammingSolver
                 var canonicalTable = canonicalConverter.ConvertToCanonicalForm(rawTable);
                 TableCache.StoreTable(canonicalTable); //table type "t-i"
                 Console.WriteLine("✓ Canonical table created and cached");
-                
+
                 // Step 5: Primal Simplex
+                //The only problem I have is that PrimalSimplexALgorithm is underlined in red, as well as "using LinearProgrammingSolver.LPAlgorithms;" when uncommented at the top of the file.
 
+                /*var simplexSolver = new PrimalSimplexAlgorithm(); //underlined here
+                var initialTable = TableCache.GetTable("t-i");
+                if (initialTable == null)
+                {
+                    Console.WriteLine("Error: Canonical table (t-i) not found in TableCache.");
+                    return;
+                }
+                simplexSolver.DisplayCanonicalForm(initialTable);
+                var optimalTable = simplexSolver.SolveLP(initialTable);
+                Console.WriteLine("✓ Simplex algorithm completed");
 
+                // Export to output.txt (project requirement, F3 rounding)
+                using (StreamWriter writer = new StreamWriter("output.txt"))
+                {
+                    writer.WriteLine("Canonical Form:");
+                    writer.WriteLine(initialTable.ToString());
+                    foreach (var table in TableCache.GetAllTables().Where(t => t.Status == "Iteration" || t.Status == "Optimal" || t.Status == "Infeasible" || t.Status == "Unbounded"))
+                    {
+                        writer.WriteLine($"\nTable {table.TableId} ({table.Status}):");
+                        writer.WriteLine(table.ToString());
+                    }
+                }
+                Console.WriteLine("Output exported to output.txt");*/
+
+               
                 // Display final summary of all cached tables
                 Console.WriteLine();
                 TableCache.DisplayTableSummary();

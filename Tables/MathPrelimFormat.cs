@@ -81,7 +81,7 @@ namespace LinearProgrammingSolver.Tables
                 
                 for (int j = 0; j < cols; j++)
                 {
-                    Console.Write($"{matrix[i, j],8:F2}");
+                    Console.Write($"{matrix[i, j],8:F3}");
                 }
                 Console.WriteLine();
             }
@@ -99,7 +99,7 @@ namespace LinearProgrammingSolver.Tables
             for (int i = 0; i < vector.Length; i++)
             {
                 string label = i < labels.Count ? labels[i] : $"V{i}";
-                Console.WriteLine($"  {label}: {vector[i]:F2}");
+                Console.WriteLine($"  {label}: {vector[i]:F3}");
             }
         }
     }
