@@ -37,8 +37,8 @@ namespace LinearProgrammingSolver.Utils
             // Create new column labels including slack/surplus variables
             var newColumnLabels = CreateNewColumnLabels(rawTable, additionalVarCount);
             
-            // Create basic variables list (slack/surplus variables form the initial basis)
-            var newBasicVariables = CreateBasicVariables(additionalVarCount);
+            // Create basic variables list (slack/surplus/artificial variables form the initial basis)
+            var newBasicVariables = CreateBasicVariables(rawTable);
 
             // Create constraint operators for canonical form (all become equality)
             var canonicalConstraintOperators = new Dictionary<string, ConstraintOperator>();
@@ -84,7 +84,7 @@ namespace LinearProgrammingSolver.Utils
 
         /// <summary>
         /// Copies constraint rows and adds slack/surplus variables to create identity matrix.
-        /// Simplified version that assumes constraints are in order: first <= constraints, then >= constraints.
+        /// Properly handles different constraint types: <=, >=, and = constraints.
         /// </summary>
         private void CopyConstraintRows(Table rawTable, double[,] newMatrix, int originalVarCount)
         {
@@ -92,31 +92,69 @@ namespace LinearProgrammingSolver.Utils
 
             for (int i = 1; i <= constraintCount; i++)
             {
-                // For now, assume all constraints are <= (add slack variables)
-                // In a more complete implementation, you would check constraint types
+                string constraintName = rawTable.RowLabels[i];
+                var constraintType = rawTable.ConstraintOperators.ContainsKey(constraintName) 
+                    ? rawTable.ConstraintOperators[constraintName] 
+                    : ConstraintOperator.LessThanOrEqual; // Default to <= if not found
                 
-                // Copy original constraint coefficients
-                for (int j = 0; j < originalVarCount; j++)
-                {
-                    newMatrix[i, j] = rawTable.Matrix[i, j];
-                }
-
                 // Initialize all slack/surplus positions to 0
                 for (int j = originalVarCount; j < newMatrix.GetLength(1) - 1; j++)
                 {
                     newMatrix[i, j] = 0.0;
                 }
 
-                // Add slack variable for this constraint (identity matrix)
-                newMatrix[i, originalVarCount + (i - 1)] = 1.0;
-
-                // Copy RHS
-                newMatrix[i, newMatrix.GetLength(1) - 1] = rawTable.Matrix[i, originalVarCount];
+                if (constraintType == ConstraintOperator.LessThanOrEqual)
+                {
+                    // <= constraint: add slack variable (+s_i)
+                    // Copy original constraint coefficients as-is
+                    for (int j = 0; j < originalVarCount; j++)
+                    {
+                        newMatrix[i, j] = rawTable.Matrix[i, j];
+                    }
+                    
+                    // Add slack variable (identity matrix: +1)
+                    newMatrix[i, originalVarCount + (i - 1)] = 1.0;
+                    
+                    // Copy RHS as-is
+                    newMatrix[i, newMatrix.GetLength(1) - 1] = rawTable.Matrix[i, originalVarCount];
+                }
+                else if (constraintType == ConstraintOperator.GreaterThanOrEqual)
+                {
+                    // >= constraint: multiply by -1 and add excess variable (+e_i)
+                    // Original: ax + by >= c becomes -ax - by + e_i = -c
+                    
+                    // Copy constraint coefficients with negation
+                    for (int j = 0; j < originalVarCount; j++)
+                    {
+                        newMatrix[i, j] = -rawTable.Matrix[i, j];
+                    }
+                    
+                    // Add excess variable (identity matrix: +1)
+                    newMatrix[i, originalVarCount + (i - 1)] = 1.0;
+                    
+                    // Copy RHS with negation
+                    newMatrix[i, newMatrix.GetLength(1) - 1] = -rawTable.Matrix[i, originalVarCount];
+                }
+                else // ConstraintOperator.Equal
+                {
+                    // = constraint: add artificial variable (+a_i)
+                    // Copy original constraint coefficients as-is
+                    for (int j = 0; j < originalVarCount; j++)
+                    {
+                        newMatrix[i, j] = rawTable.Matrix[i, j];
+                    }
+                    
+                    // Add artificial variable (identity matrix: +1)
+                    newMatrix[i, originalVarCount + (i - 1)] = 1.0;
+                    
+                    // Copy RHS as-is
+                    newMatrix[i, newMatrix.GetLength(1) - 1] = rawTable.Matrix[i, originalVarCount];
+                }
             }
         }
 
         /// <summary>
-        /// Creates column labels including slack/surplus variables.
+        /// Creates column labels including slack/surplus/artificial variables based on constraint types.
         /// </summary>
         private List<string> CreateNewColumnLabels(Table rawTable, int additionalVarCount)
         {
@@ -128,10 +166,27 @@ namespace LinearProgrammingSolver.Utils
                 labels.Add(rawTable.ColumnLabels[i]);
             }
 
-            // Add slack variable labels (simplified version)
-            for (int i = 1; i <= additionalVarCount; i++)
+            // Add auxiliary variable labels based on constraint types
+            int constraintCount = rawTable.GetRowCount() - 1;
+            for (int i = 1; i <= constraintCount; i++)
             {
-                labels.Add($"s{i}");
+                string constraintName = rawTable.RowLabels[i];
+                var constraintType = rawTable.ConstraintOperators.ContainsKey(constraintName) 
+                    ? rawTable.ConstraintOperators[constraintName] 
+                    : ConstraintOperator.LessThanOrEqual;
+
+                if (constraintType == ConstraintOperator.LessThanOrEqual)
+                {
+                    labels.Add($"s{i}"); // Slack variable
+                }
+                else if (constraintType == ConstraintOperator.GreaterThanOrEqual)
+                {
+                    labels.Add($"e{i}"); // Excess variable
+                }
+                else // Equal
+                {
+                    labels.Add($"a{i}"); // Artificial variable
+                }
             }
 
             // Add RHS label
@@ -141,16 +196,33 @@ namespace LinearProgrammingSolver.Utils
         }
 
         /// <summary>
-        /// Creates list of basic variables (slack variables form the initial basis).
+        /// Creates list of basic variables based on constraint types.
+        /// Slack, excess, and artificial variables form the initial basis.
         /// </summary>
-        private List<string> CreateBasicVariables(int additionalVarCount)
+        private List<string> CreateBasicVariables(Table rawTable)
         {
             var basicVars = new List<string>();
 
-            // Add slack variables as basic variables (simplified version)
-            for (int i = 1; i <= additionalVarCount; i++)
+            int constraintCount = rawTable.GetRowCount() - 1;
+            for (int i = 1; i <= constraintCount; i++)
             {
-                basicVars.Add($"s{i}");
+                string constraintName = rawTable.RowLabels[i];
+                var constraintType = rawTable.ConstraintOperators.ContainsKey(constraintName) 
+                    ? rawTable.ConstraintOperators[constraintName] 
+                    : ConstraintOperator.LessThanOrEqual;
+
+                if (constraintType == ConstraintOperator.LessThanOrEqual)
+                {
+                    basicVars.Add($"s{i}"); // Slack variable
+                }
+                else if (constraintType == ConstraintOperator.GreaterThanOrEqual)
+                {
+                    basicVars.Add($"e{i}"); // Excess variable
+                }
+                else // Equal
+                {
+                    basicVars.Add($"a{i}"); // Artificial variable
+                }
             }
 
             return basicVars;

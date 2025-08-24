@@ -348,6 +348,93 @@ namespace LinearProgrammingSolver.Tables
             return "="; // Default to equality if not found
         }
 
+        // =================================================================
+        // STATUS DETECTION METHODS (Simplex algorithm status checks)
+        // =================================================================
+        
+        public bool IsOptimal()
+        {
+            // Check if current table is optimal
+            // All coefficients in objective row should be non-negative for maximization
+            // All coefficients in objective row should be non-positive for minimization
+            
+            int objRow = 0; // Objective is always first row
+            int rhsCol = GetColumnCount() - 1; // Exclude RHS column
+            
+            for (int j = 0; j < rhsCol; j++)
+            {
+                double coefficient = GetElement(objRow, j);
+                
+                if (OptimizationType == OptimizationType.Maximize)
+                {
+                    if (coefficient < -0.001) // Negative coefficient means not optimal
+                        return false;
+                }
+                else // Minimize
+                {
+                    if (coefficient > 0.001) // Positive coefficient means not optimal
+                        return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        public bool IsUnbounded(int enteringColumn)
+        {
+            // Check if problem is unbounded for the given entering variable
+            // Problem is unbounded if all coefficients in entering column are <= 0
+            // (excluding objective row)
+            
+            for (int i = 1; i < GetRowCount(); i++) // Skip objective row
+            {
+                if (GetElement(i, enteringColumn) > 0.001)
+                {
+                    return false; // Found positive coefficient, not unbounded
+                }
+            }
+            
+            return true; // All coefficients <= 0, unbounded
+        }
+        
+        public bool IsInfeasible()
+        {
+            // Check if current table represents an infeasible solution
+            // Two main checks:
+            // 1. Negative RHS values (basic infeasibility)
+            // 2. Artificial variables are positive in optimal solution
+            
+            int rhsCol = GetColumnCount() - 1;
+            
+            // Check for negative RHS values
+            for (int i = 1; i < GetRowCount(); i++)
+            {
+                if (GetElement(i, rhsCol) < -0.001)
+                    return true;
+            }
+            
+            // Check for positive artificial variables in basis (post-optimal check)
+            if (BasicVariables != null)
+            {
+                for (int i = 0; i < BasicVariables.Count; i++)
+                {
+                    string bv = BasicVariables[i];
+                    if (bv.StartsWith("a") && GetElement(i + 1, rhsCol) > 0.001)
+                    {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        public bool IsFeasible()
+        {
+            // Opposite of IsInfeasible()
+            return !IsInfeasible();
+        }
+        
         // Simple string representation of the table
         public override string ToString()
         {

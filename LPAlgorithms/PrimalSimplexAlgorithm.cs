@@ -12,14 +12,13 @@ namespace LinearProgrammingSolver.LPAlgorithms
         {
             if (initialTable == null)
             {
-                Console.WriteLine("Error: Initial table is null.");
                 return null;
             }
 
             Table currentTable = initialTable;  // Start from canonical form (t-i)
             int iterationCount = 1;
 
-            while (!IsOptimal(currentTable))
+            while (!currentTable.IsOptimal())
             {
               /* REMOVED Infeasibility check to avoid false positives
                // Check for infeasibility
@@ -33,14 +32,33 @@ namespace LinearProgrammingSolver.LPAlgorithms
                 // Perform one iteration (pivot)
                 Table nextTable = PerformIteration(currentTable);
 
-                // ADDED: Check for terminal status to prevent overwriting Unbounded
+                // Check for terminal status to prevent overwriting Unbounded
                 if (nextTable.Status == "Unbounded")
                 {
                     TableCache.StoreTable(nextTable);
                     return nextTable;
                 }
 
-                // Name and store the iteration
+                // Check if this iteration is optimal - if so, store as t-optimal directly
+                if (nextTable.IsOptimal())
+                {
+                    nextTable.TableId = "t-optimal";
+                    
+                    // Post-optimal check for infeasibility
+                    if (nextTable.IsInfeasible())
+                    {
+                        nextTable.Status = "Infeasible";
+                    }
+                    else
+                    {
+                        nextTable.Status = "Optimal";
+                    }
+                    
+                    TableCache.StoreTable(nextTable);
+                    return nextTable;
+                }
+
+                // Not optimal yet - store as iteration and continue
                 nextTable.TableId = $"t-{iterationCount}";
                 nextTable.Status = "Iteration";
                 TableCache.StoreTable(nextTable);
@@ -57,20 +75,8 @@ namespace LinearProgrammingSolver.LPAlgorithms
                 }
             }
 
-            // Mark final as optimal
-            currentTable.Status = "Optimal";
-            currentTable.TableId = "t-optimal";
-            TableCache.StoreTable(currentTable);
-
-            // CHANGED: Added caching after setting Infeasible
-            // Post-optimal check for infeasibility if artificial variables are positive
-            if (IsInfeasiblePostOptimal(currentTable))
-            {
-                Console.WriteLine("Infeasible post-optimal: Artificial variables positive.");
-                currentTable.Status = "Infeasible";
-                TableCache.StoreTable(currentTable); // ADDED: Re-cache Infeasible table
-            }
-
+            // This should never be reached since optimality is checked within the loop
+            // If we get here, something went wrong with the optimality detection
             return currentTable;
         }
 
@@ -84,7 +90,7 @@ namespace LinearProgrammingSolver.LPAlgorithms
             if (enteringColumn == -1) return currentTable; // Already optimal
 
             // Step 2: Check for unboundedness
-            if (IsUnbounded(currentTable, enteringColumn))
+            if (currentTable.IsUnbounded(enteringColumn))
             {
                 var unboundedTable = new Table($"{currentTable.TableId}-unbounded", currentTable, "Unbounded");
                 TableCache.StoreTable(unboundedTable);
@@ -95,7 +101,7 @@ namespace LinearProgrammingSolver.LPAlgorithms
             int leavingRow = SelectLeavingVariable(currentTable, enteringColumn);
             if (leavingRow == -1)
             {
-                var unboundedTable = new Table($"{currentTable.TableId}-unbounded", currentTable, "Unbounded");
+                var unboundedTable = new Table($"{currentTable.TableId}-unbounded-ratio", currentTable, "Unbounded");
                 TableCache.StoreTable(unboundedTable);
                 return unboundedTable;
             }
@@ -172,50 +178,6 @@ namespace LinearProgrammingSolver.LPAlgorithms
             return bestRow;
         }
 
-        public bool IsOptimal(Table table)
-        {
-            // Check if current table is optimal
-            // All coefficients in objective row should be non-negative
-
-            int objRow = 0; // Objective is always first row
-            int rhsCol = table.GetColumnCount() - 1; // Exclude RHS column
-
-            for (int j = 0; j < rhsCol; j++)
-            {
-                double coefficient = table.GetElement(objRow, j);
-
-                if (table.OptimizationType == OptimizationType.Maximize)
-                {
-                    if (coefficient < -0.001) // Negative coefficient means not optimal
-                        return false;
-                }
-                else // Minimize
-                {
-                    if (coefficient > 0.001) // Positive coefficient means not optimal
-                        return false;
-                }
-            }
-
-            return true;
-        }
-
-        public bool IsUnbounded(Table table, int enteringColumn)
-        {
-            // Check if problem is unbounded
-            // All coefficients in entering column should be non-positive
-            // Problem is unbounded if all coefficients in entering column are <= 0
-            // (excluding objective row)
-
-            for (int i = 1; i < table.GetRowCount(); i++) // Skip objective row
-            {
-                if (table.GetElement(i, enteringColumn) > 0.001)
-                {
-                    return false; // Found positive coefficient, not unbounded
-                }
-            }
-
-            return true; // All coefficients <= 0, unbounded
-        }
 
         /*public Table CreateCanonicalForm(LinearProgrammingModel model)
         {
@@ -351,7 +313,6 @@ namespace LinearProgrammingSolver.LPAlgorithms
 
         public void DisplayCanonicalForm(Table table)
         {
-            Console.WriteLine("Canonical Form:");
             table.DisplayTraditional();
         }
 
@@ -359,7 +320,6 @@ namespace LinearProgrammingSolver.LPAlgorithms
         {
             foreach (var table in allTables)
             {
-                Console.WriteLine($"Table {table.TableId} ({table.Status}):");
                 table.DisplayTraditional();  
             }
         }
@@ -377,20 +337,6 @@ namespace LinearProgrammingSolver.LPAlgorithms
         } */
 
 
-        /// Post-optimal check for infeasibility (artificial variables positive).
-        private bool IsInfeasiblePostOptimal(Table table)
-        {
-            int rhsCol = table.GetColumnCount() - 1;
-            for (int i = 0; i < table.BasicVariables.Count; i++)
-            {
-                string bv = table.BasicVariables[i];
-                if (bv.StartsWith("a") && table.GetElement(i + 1, rhsCol) > 0.001)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
 
         /// Performs Gaussian elimination pivot.
         /// Creates new table to avoid modifying original.

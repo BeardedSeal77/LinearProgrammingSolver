@@ -64,7 +64,6 @@ namespace LinearProgrammingSolver
                     Console.WriteLine("Error: Canonical table (t-i) not found in TableCache.");
                     return;
                 }
-                simplexSolver.DisplayCanonicalForm(initialTable);
                 var optimalTable = simplexSolver.SolveLP(initialTable);
                 Console.WriteLine("✓ Simplex algorithm completed");
 
