@@ -1,9 +1,10 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 using LinearProgrammingSolver.Utils;
 using LinearProgrammingSolver.Tables;
-//using LinearProgrammingSolver.LPAlgorithms;
+using LinearProgrammingSolver.LPAlgorithms;
 // using LinearProgrammingSolver.IPAlgorithms;
 
 namespace LinearProgrammingSolver
@@ -56,8 +57,8 @@ namespace LinearProgrammingSolver
                 // Step 5: Primal Simplex
                 //The only problem I have is that PrimalSimplexALgorithm is underlined in red, as well as "using LinearProgrammingSolver.LPAlgorithms;" when uncommented at the top of the file.
 
-                /*var simplexSolver = new PrimalSimplexAlgorithm(); //underlined here
-                var initialTable = TableCache.GetTable("t-i");
+                var simplexSolver = new PrimalSimplexAlgorithm();
+                var initialTable = TableCache.GetTable("t-i");  
                 if (initialTable == null)
                 {
                     Console.WriteLine("Error: Canonical table (t-i) not found in TableCache.");
@@ -78,7 +79,7 @@ namespace LinearProgrammingSolver
                         writer.WriteLine(table.ToString());
                     }
                 }
-                Console.WriteLine("Output exported to output.txt");*/
+                Console.WriteLine("Output exported to output.txt");
 
                
                 // Display final summary of all cached tables

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using LinearProgrammingSolver.Tables;
-using LinearProgrammingSolver.Models;
 
 namespace LinearProgrammingSolver.LPAlgorithms
 {

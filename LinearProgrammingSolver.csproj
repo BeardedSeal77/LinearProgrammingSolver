@@ -9,9 +9,8 @@
 
   <ItemGroup>
     <Folder Include="public\" />
-    <Compile Remove="LPAlgorithms/**" />
     <Compile Remove="IPAlgorithms/**" />
-    <Compile Remove="Models/**" />
+    <Compile Remove="LPAlgorithms/RevisedSimplexAlgorithm.cs" />
     <Compile Remove="Utils/FileWriter.cs" />
     <Compile Remove="Utils/PivotingOperations.cs" />
     <Compile Remove="Tables/BranchAndBoundTable.cs" />

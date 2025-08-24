@@ -14,7 +14,7 @@ namespace LinearProgrammingSolver.IPAlgorithms
             // Set up tracking collections for knapsack-specific approach
         }
 
-        public BranchAndBoundTable SolveKnapsackIP(LinearProgrammingModel model)
+        public BranchAndBoundTable SolveKnapsackIP(Table model)
         {
             // Solve Knapsack Integer Programming problem
             // Use knapsack-specific branching strategy
@@ -38,7 +38,7 @@ namespace LinearProgrammingSolver.IPAlgorithms
             // Use knapsack-specific selection criteria
         }
 
-        public bool IsKnapsackProblem(LinearProgrammingModel model)
+        public bool IsKnapsackProblem(Table model)
         {
             // Verify that the model is a knapsack problem
             // Check for single constraint and binary variables
