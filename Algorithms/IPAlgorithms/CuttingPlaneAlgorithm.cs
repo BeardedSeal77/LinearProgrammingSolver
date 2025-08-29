@@ -1,8 +1,7 @@
 using LinearProgrammingSolver.Tables;
-using LinearProgrammingSolver.LPAlgorithms;
-using LinearProgrammingSolver.Models;
+using LinearProgrammingSolver.Algorithms.LPAlgorithms;
 
-namespace LinearProgrammingSolver.IPAlgorithms
+namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
 {
     public class CuttingPlaneAlgorithm
     {
