@@ -428,47 +428,63 @@ namespace LinearProgrammingSolver
             Console.WriteLine($"Processing: {inputPath}");
             Console.WriteLine();
             
-            // Step 1: FileReader detects file type and parses accordingly
-            var (problemType, data) = fileReader.ParseFile(inputPath);
-            currentProblemType = problemType;  // Store current problem type
+            try
+            {
+                // Step 1: FileReader detects file type and parses accordingly
+                var (problemType, data) = fileReader.ParseFile(inputPath);
+                currentProblemType = problemType;  // Store current problem type
             
-            if (problemType == ProblemType.LinearProgramming)
-            {
-                // Handle LP/IP problems
-                var (matrix, rowLabels, columnLabels, optimizationType, constraintOperators) = 
-                    ((double[,], List<string>, List<string>, OptimizationType, Dictionary<string, ConstraintOperator>))data;
-                
-                // Step 2: Program.cs constructs Table object
-                currentRawTable = new Table("t-raw", matrix, rowLabels, columnLabels, optimizationType, "Raw", constraintOperators);
-                
-                // Step 3: Program.cs stores Table in cache
-                TableCache.StoreTable(currentRawTable);
-                Console.WriteLine("✓ Raw table created and cached");
-                
-                // Step 4: Convert to canonical form
-                var canonicalTable = canonicalConverter.ConvertToCanonicalForm(currentRawTable);
-                TableCache.StoreTable(canonicalTable);
-                Console.WriteLine("✓ Canonical table created and cached");
-                
-                Console.WriteLine();
-                Console.WriteLine("Linear Programming file loaded successfully!");
-                Console.WriteLine($"Problem type: {optimizationType}");
-                Console.WriteLine($"Variables: {currentRawTable.GetVariableCount()}");
-                Console.WriteLine($"Constraints: {currentRawTable.GetRowCount() - 1}");
+                if (problemType == ProblemType.LinearProgramming)
+                {
+                    // Handle LP/IP problems
+                    var (matrix, rowLabels, columnLabels, optimizationType, constraintOperators) = 
+                        ((double[,], List<string>, List<string>, OptimizationType, Dictionary<string, ConstraintOperator>))data;
+                    
+                    // Step 2: Program.cs constructs Table object
+                    currentRawTable = new Table("t-raw", matrix, rowLabels, columnLabels, optimizationType, "Raw", constraintOperators);
+                    
+                    // Step 3: Program.cs stores Table in cache
+                    TableCache.StoreTable(currentRawTable);
+                    Console.WriteLine("Raw table created and cached");
+                    
+                    // Step 4: Convert to canonical form
+                    var canonicalTable = canonicalConverter.ConvertToCanonicalForm(currentRawTable);
+                    TableCache.StoreTable(canonicalTable);
+                    Console.WriteLine("Canonical table created and cached");
+                    
+                    Console.WriteLine();
+                    Console.WriteLine("Linear Programming file loaded successfully!");
+                    Console.WriteLine($"Problem type: {optimizationType}");
+                    Console.WriteLine($"Variables: {currentRawTable.GetVariableCount()}");
+                    Console.WriteLine($"Constraints: {currentRawTable.GetRowCount() - 1}");
+                }
+                else if (problemType == ProblemType.NonLinearProgramming)
+                {
+                    // Handle NLP problems
+                    var nlpProblem = (NLPProblem)data;
+                    
+                    Console.WriteLine("NLP problem parsed");
+                    Console.WriteLine();
+                    Console.WriteLine("Non-Linear Programming file loaded successfully!");
+                    Console.WriteLine($"Function: {nlpProblem.Function}");
+                    Console.WriteLine($"Starting point: ({nlpProblem.StartingPoint.x}, {nlpProblem.StartingPoint.y})");
+                    
+                    // Store NLP problem for algorithm selection
+                    // TODO: Add NLP storage mechanism similar to Table cache
+                }
             }
-            else if (problemType == ProblemType.NonLinearProgramming)
+            catch (FormatException ex)
             {
-                // Handle NLP problems
-                var nlpProblem = (NLPProblem)data;
-                
-                Console.WriteLine("✓ NLP problem parsed");
+                Console.WriteLine("File Format Error:");
+                Console.WriteLine(ex.Message);
                 Console.WriteLine();
-                Console.WriteLine("Non-Linear Programming file loaded successfully!");
-                Console.WriteLine($"Function: {nlpProblem.Function}");
-                Console.WriteLine($"Starting point: ({nlpProblem.StartingPoint.x}, {nlpProblem.StartingPoint.y})");
+                Console.WriteLine("Please ensure your file follows one of these formats:");
+                Console.WriteLine("1. Linear Programming: First line starts with 'max' or 'min'");
+                Console.WriteLine("2. Non-Linear Programming: First line starts with 'F(x,y) = ...'");
                 
-                // Store NLP problem for algorithm selection
-                // TODO: Add NLP storage mechanism similar to Table cache
+                // Reset the current input path since parsing failed
+                currentInputPath = "";
+                currentProblemType = ProblemType.LinearProgramming; // Reset to default
             }
         }
 

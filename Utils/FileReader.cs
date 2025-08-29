@@ -57,8 +57,11 @@ namespace LinearProgrammingSolver.Utils
                 return ProblemType.NonLinearProgramming;
             }
             
-            // Default to Linear Programming for unknown formats
-            return ProblemType.LinearProgramming;
+            // Throw error for unrecognized format
+            throw new FormatException($"Unrecognized file format. First line: '{firstLine.Trim()}'\n" +
+                                    "Expected formats:\n" +
+                                    "- Linear Programming: 'max ...' or 'min ...'\n" +
+                                    "- Non-Linear Programming: 'F(x,y) = ...'");
         }
 
         /// <summary>
