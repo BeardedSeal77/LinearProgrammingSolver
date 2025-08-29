@@ -1,19 +1,71 @@
 using LinearProgrammingSolver.Tables;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace LinearProgrammingSolver.Utils
 {
     /// <summary>
-    /// Utility class for parsing LP model files into raw data components.
-    /// Returns parsed data for table construction - does NOT create Table objects.
+    /// Utility class for parsing LP/IP and NLP model files.
+    /// Detects file type and routes to appropriate parser.
     /// </summary>
     public class FileReader
     {
         /// <summary>
-        /// Parses LP model from text file and returns raw data components.
-        /// Returns tuple of (matrix, rowLabels, columnLabels, optimizationType, constraintOperators) for table construction.
+        /// Detects file type and parses accordingly.
+        /// Returns either LP/IP data or NLP data based on file content.
         /// </summary>
-        public (double[,] matrix, List<string> rowLabels, List<string> columnLabels, OptimizationType optimizationType, Dictionary<string, ConstraintOperator> constraintOperators) ParseFile(string filePath)
+        public (ProblemType problemType, object data) ParseFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException($"File not found: {filePath}");
+
+            var lines = File.ReadAllLines(filePath);
+            if (lines.Length == 0)
+                throw new ArgumentException("File is empty");
+
+            // Detect problem type based on first line
+            ProblemType problemType = DetectProblemType(lines[0]);
+
+            if (problemType == ProblemType.LinearProgramming)
+            {
+                var lpData = ParseLinearProgram(filePath);
+                return (problemType, lpData);
+            }
+            else
+            {
+                var nlpData = ParseNonLinearProgram(filePath);
+                return (problemType, nlpData);
+            }
+        }
+
+        /// <summary>
+        /// Detects whether file contains LP/IP or NLP problem.
+        /// </summary>
+        private ProblemType DetectProblemType(string firstLine)
+        {
+            string line = firstLine.Trim().ToLower();
+            
+            // Check for LP/IP indicators (max/min)
+            if (line.StartsWith("max") || line.StartsWith("min"))
+            {
+                return ProblemType.LinearProgramming;
+            }
+            
+            // Check for NLP indicators (f(...))
+            if (line.StartsWith("f"))
+            {
+                return ProblemType.NonLinearProgramming;
+            }
+            
+            // Default to Linear Programming for unknown formats
+            return ProblemType.LinearProgramming;
+        }
+
+        /// <summary>
+        /// Parses Linear Programming/Integer Programming files.
+        /// Returns LP data components for table construction.
+        /// </summary>
+        public (double[,] matrix, List<string> rowLabels, List<string> columnLabels, OptimizationType optimizationType, Dictionary<string, ConstraintOperator> constraintOperators) ParseLinearProgram(string filePath)
         {
             // Validate file exists and has minimum required structure
             if (!ValidateInputFile(filePath))
@@ -362,6 +414,79 @@ namespace LinearProgrammingSolver.Utils
             }
             
             return (optType, coeffsPart);
+        }
+
+        /// <summary>
+        /// Parses Non-Linear Programming files.
+        /// Returns NLP problem structure.
+        /// </summary>
+        public NLPProblem ParseNonLinearProgram(string filePath)
+        {
+            var lines = File.ReadAllLines(filePath);
+            var nlpProblem = new NLPProblem();
+
+            // Parse first line - the function
+            string functionLine = lines[0].Trim();
+            nlpProblem.Function = ParseNLPFunction(functionLine);
+
+            // Parse second line - starting point (optional, default to (0,0))
+            if (lines.Length > 1 && !string.IsNullOrWhiteSpace(lines[1]))
+            {
+                nlpProblem.StartingPoint = ParseNLPStartingPoint(lines[1].Trim());
+            }
+            else
+            {
+                nlpProblem.StartingPoint = (0.0, 0.0);
+            }
+
+            return nlpProblem;
+        }
+
+        /// <summary>
+        /// Parses NLP function from first line.
+        /// </summary>
+        private string ParseNLPFunction(string functionLine)
+        {
+            // Expected format: F(x,y) = -x2 -xy -2y2
+            // or: F(x,y) = -x^2 -xy -2y^2
+            
+            // Remove F(x,y) = part
+            var equalIndex = functionLine.IndexOf('=');
+            if (equalIndex == -1)
+            {
+                throw new ArgumentException("NLP function must contain '=' sign");
+            }
+
+            string expression = functionLine.Substring(equalIndex + 1).Trim();
+            
+            // Normalize notation: replace x2 with x^2, y2 with y^2 for consistency
+            expression = Regex.Replace(expression, @"x(\d+)", "x^$1");
+            expression = Regex.Replace(expression, @"y(\d+)", "y^$1");
+            
+            return expression;
+        }
+
+        /// <summary>
+        /// Parses starting point from second line.
+        /// </summary>
+        private (double x, double y) ParseNLPStartingPoint(string pointLine)
+        {
+            // Expected format: (0,0) or (1.5, -2.3)
+            pointLine = pointLine.Replace("(", "").Replace(")", "").Trim();
+            var coordinates = pointLine.Split(',');
+            
+            if (coordinates.Length != 2)
+            {
+                throw new ArgumentException("Starting point must have exactly 2 coordinates");
+            }
+
+            if (!double.TryParse(coordinates[0].Trim(), out double x) ||
+                !double.TryParse(coordinates[1].Trim(), out double y))
+            {
+                throw new ArgumentException("Invalid coordinate values in starting point");
+            }
+
+            return (x, y);
         }
     }
 }

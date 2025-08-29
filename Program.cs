@@ -2,10 +2,14 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using LinearProgrammingSolver.Utils;
 using LinearProgrammingSolver.Tables;
 using LinearProgrammingSolver.LPAlgorithms;
 using LinearProgrammingSolver.IPAlgorithms;
+using LinearProgrammingSolver.NLPAlgorithms;
 
 namespace LinearProgrammingSolver
 {
@@ -27,7 +31,8 @@ namespace LinearProgrammingSolver
         BranchBoundSimplex = 3,
         BranchBoundKnapsack = 4,
         CuttingPlane = 5,
-        BackToMain = 6
+        NonLinearProgramming = 6,
+        BackToMain = 7
     }
 
     // Enum for sensitivity analysis options
@@ -48,6 +53,15 @@ namespace LinearProgrammingSolver
         BackToMain = 13
     }
 
+    // Enum for file loading options
+    public enum FileLoadOption
+    {
+        LoadDefault = 1,
+        ChooseFile = 2,
+        EnterPath = 3,
+        BackToMain = 4
+    }
+
     class Program
     {
         private static FileReader fileReader = new FileReader();
@@ -55,6 +69,7 @@ namespace LinearProgrammingSolver
         private static Table currentRawTable = null;
         private static Table currentOptimalTable = null;
         private static string currentInputPath = "";
+        private static ProblemType currentProblemType = ProblemType.LinearProgramming;
 
         static void Main(string[] args)
         {
@@ -80,7 +95,7 @@ namespace LinearProgrammingSolver
             Console.WriteLine("╚══════╝ ╚═════╝ ╚══════╝ ╚═══╝  ╚══════╝╚═╝  ╚═╝");
             Console.WriteLine();
             Console.WriteLine("═══════════════════════════════════════════════════════════════════════════════");
-            Console.WriteLine("        LPR 381 Project - Menu-Driven LP/IP Solver");
+            Console.WriteLine("        LPR 381 Project - Menu-Driven LP/IP/NLP Solver");
             Console.WriteLine("═══════════════════════════════════════════════════════════════════════════════");
             Console.WriteLine();
             
@@ -169,7 +184,7 @@ namespace LinearProgrammingSolver
             Console.WriteLine("║                              MAIN MENU                                       ║");
             Console.WriteLine("╠══════════════════════════════════════════════════════════════════════════════╣");
             Console.WriteLine("║                                                                              ║");
-            Console.WriteLine("║  1. Load Input File          - Load LP/IP model from text file               ║");
+            Console.WriteLine("║  1. Load Input File          - Load LP/IP or NLP model from text file        ║");
             Console.WriteLine("║  2. Select Algorithm          - Choose solving algorithm                     ║");
             Console.WriteLine("║  3. Sensitivity Analysis      - Perform post-solution analysis               ║");
             Console.WriteLine("║  4. View Results              - Display solution and tables                  ║");
@@ -195,52 +210,233 @@ namespace LinearProgrammingSolver
         static void HandleLoadFile()
         {
             Console.Clear();
-            Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                            LOAD INPUT FILE                                   ║");
-            Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
-            Console.WriteLine();
             
-            try
+            bool backToMain = false;
+            
+            while (!backToMain)
             {
-                // Clear any existing tables from previous runs
-                TableCache.ClearAllTables();
+                DisplayFileLoadMenu();
                 
-                // Use robust path resolution that works from any working directory
-                string currentDir = Directory.GetCurrentDirectory();
-                string projectDir = currentDir;
-                
-                // If running from debugger, find the project directory
-                while (!File.Exists(Path.Combine(projectDir, "data", "input.txt")) && 
-                       Directory.GetParent(projectDir) != null)
+                if (int.TryParse(Console.ReadLine(), out int choice))
                 {
-                    projectDir = Directory.GetParent(projectDir).FullName;
-                }
-                
-                string inputPath = Path.Combine(projectDir, "data", "input.txt");
-                
-                if (!File.Exists(inputPath))
-                {
-                    Console.WriteLine($"Input file not found at: {inputPath}");
-                    Console.Write("Please enter the full path to your input file: ");
-                    string userPath = Console.ReadLine();
-                    
-                    if (!string.IsNullOrEmpty(userPath) && File.Exists(userPath))
+                    if (choice >= 1 && choice <= 4)
                     {
-                        inputPath = userPath;
+                        var selectedOption = (FileLoadOption)choice;
+                        
+                        switch (selectedOption)
+                        {
+                            case FileLoadOption.LoadDefault:
+                                LoadDefaultFile();
+                                backToMain = true;
+                                break;
+                            case FileLoadOption.ChooseFile:
+                                ChooseFileFromExplorer();
+                                backToMain = true;
+                                break;
+                            case FileLoadOption.EnterPath:
+                                EnterFilePathManually();
+                                backToMain = true;
+                                break;
+                            case FileLoadOption.BackToMain:
+                                backToMain = true;
+                                break;
+                        }
                     }
                     else
                     {
-                        Console.WriteLine("Invalid file path. Operation cancelled.");
-                        return;
+                        Console.WriteLine("Invalid option. Please try again.");
                     }
                 }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter a number.");
+                }
                 
-                currentInputPath = inputPath;
-                Console.WriteLine($"Processing: {inputPath}");
+                if (!backToMain)
+                {
+                    Console.WriteLine("\nPress any key to continue...");
+                    Console.ReadKey();
+                    Console.Clear();
+                }
+            }
+        }
+
+        static void DisplayFileLoadMenu()
+        {
+            Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║                            LOAD INPUT FILE                                   ║");
+            Console.WriteLine("╠══════════════════════════════════════════════════════════════════════════════╣");
+            Console.WriteLine("║                                                                              ║");
+            Console.WriteLine("║  1. Load Default File        - Load data/input.txt (LP/IP)                   ║");
+            Console.WriteLine("║  2. Choose File              - Browse with file explorer (LP/IP/NLP)         ║");
+            Console.WriteLine("║  3. Enter File Path          - Type file path manually (LP/IP/NLP)           ║");
+            Console.WriteLine("║  4. Back to Main Menu        - Return to main menu                           ║");
+            Console.WriteLine("║                                                                              ║");
+            Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
+            Console.WriteLine();
+            Console.Write("Select an option (1-4): ");
+        }
+
+        static void LoadDefaultFile()
+        {
+            Console.Clear();
+            Console.WriteLine("Loading default file (data/input.txt)...\n");
+            
+            try
+            {
+                string inputPath = FindDefaultInputFile();
+                ProcessInputFile(inputPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading default file: {ex.Message}");
+            }
+        }
+
+        static void ChooseFileFromExplorer()
+        {
+            Console.Clear();
+            Console.WriteLine("Attempting to open file explorer dialog...\n");
+            
+            try
+            {
+                // Initialize Windows Forms application for console app
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                
+                // Create and configure the file dialog
+                using (var openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+                    openFileDialog.Title = "Select Input File - Linear Programming Solver";
+                    openFileDialog.InitialDirectory = Path.Combine(Directory.GetCurrentDirectory(), "data");
+                    openFileDialog.RestoreDirectory = true;
+                    openFileDialog.CheckFileExists = true;
+                    openFileDialog.CheckPathExists = true;
+                    openFileDialog.Multiselect = false;
+                    
+                    Console.WriteLine("File dialog launching...");
+                    Console.WriteLine("If you don't see the dialog window:");
+                    Console.WriteLine("- Check behind other windows or on other monitors");
+                    Console.WriteLine("- Press Alt+Tab to cycle through open windows");
+                    Console.WriteLine("- Look for the dialog in your taskbar");
+                    Console.WriteLine();
+                    Console.WriteLine("Press any key to cancel and return to the file menu if the dialog doesn't appear...");
+                    Console.WriteLine();
+                    
+                    // Start the dialog in a separate task
+                    var dialogTask = Task.Run(() => openFileDialog.ShowDialog());
+                    
+                    // Wait for either the dialog to complete or user to press a key
+                    while (!dialogTask.IsCompleted)
+                    {
+                        if (Console.KeyAvailable)
+                        {
+                            Console.ReadKey(true); // Consume the key press
+                            Console.WriteLine("Dialog cancelled by user. Returning to file menu...");
+                            return;
+                        }
+                        Thread.Sleep(100); // Check every 100ms
+                    }
+                    
+                    DialogResult result = dialogTask.Result;
+                    
+                    if (result == DialogResult.OK)
+                    {
+                        string selectedFile = openFileDialog.FileName;
+                        Console.WriteLine($"File selected: {selectedFile}\n");
+                        ProcessInputFile(selectedFile);
+                    }
+                    else
+                    {
+                        Console.WriteLine("File selection cancelled.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error with file dialog: {ex.Message}");
+                Console.WriteLine("\nThe file explorer dialog could not be opened.");
+                Console.WriteLine("This might be due to:");
+                Console.WriteLine("- Running in a restricted environment");
+                Console.WriteLine("- Missing Windows Forms components");
+                Console.WriteLine("- System permission issues");
                 Console.WriteLine();
-                
-                // Step 1: FileReader ONLY parses (no table construction)
-                var (matrix, rowLabels, columnLabels, optimizationType, constraintOperators) = fileReader.ParseFile(inputPath);
+                Console.WriteLine("Please use option 3 'Enter File Path' to manually specify your file location.");
+            }
+        }
+
+        static void EnterFilePathManually()
+        {
+            Console.Clear();
+            Console.WriteLine("Enter file path manually:\n");
+            Console.Write("Please enter the full path to your input file: ");
+            
+            string userPath = Console.ReadLine();
+            
+            if (!string.IsNullOrWhiteSpace(userPath))
+            {
+                try
+                {
+                    ProcessInputFile(userPath);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading file: {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No file path entered. Operation cancelled.");
+            }
+        }
+
+        static string FindDefaultInputFile()
+        {
+            // Use robust path resolution that works from any working directory
+            string currentDir = Directory.GetCurrentDirectory();
+            string projectDir = currentDir;
+            
+            // If running from debugger, find the project directory
+            while (!File.Exists(Path.Combine(projectDir, "data", "input.txt")) && 
+                   Directory.GetParent(projectDir) != null)
+            {
+                projectDir = Directory.GetParent(projectDir).FullName;
+            }
+            
+            string inputPath = Path.Combine(projectDir, "data", "input.txt");
+            
+            if (!File.Exists(inputPath))
+            {
+                throw new FileNotFoundException($"Default input file not found at: {inputPath}");
+            }
+            
+            return inputPath;
+        }
+
+        static void ProcessInputFile(string inputPath)
+        {
+            if (!File.Exists(inputPath))
+            {
+                throw new FileNotFoundException($"File not found: {inputPath}");
+            }
+            
+            // Clear any existing tables from previous runs
+            TableCache.ClearAllTables();
+            
+            currentInputPath = inputPath;
+            Console.WriteLine($"Processing: {inputPath}");
+            Console.WriteLine();
+            
+            // Step 1: FileReader detects file type and parses accordingly
+            var (problemType, data) = fileReader.ParseFile(inputPath);
+            currentProblemType = problemType;  // Store current problem type
+            
+            if (problemType == ProblemType.LinearProgramming)
+            {
+                // Handle LP/IP problems
+                var (matrix, rowLabels, columnLabels, optimizationType, constraintOperators) = 
+                    ((double[,], List<string>, List<string>, OptimizationType, Dictionary<string, ConstraintOperator>))data;
                 
                 // Step 2: Program.cs constructs Table object
                 currentRawTable = new Table("t-raw", matrix, rowLabels, columnLabels, optimizationType, "Raw", constraintOperators);
@@ -255,16 +451,24 @@ namespace LinearProgrammingSolver
                 Console.WriteLine("✓ Canonical table created and cached");
                 
                 Console.WriteLine();
-                Console.WriteLine("File loaded successfully!");
+                Console.WriteLine("Linear Programming file loaded successfully!");
                 Console.WriteLine($"Problem type: {optimizationType}");
                 Console.WriteLine($"Variables: {currentRawTable.GetVariableCount()}");
                 Console.WriteLine($"Constraints: {currentRawTable.GetRowCount() - 1}");
             }
-            catch (Exception ex)
+            else if (problemType == ProblemType.NonLinearProgramming)
             {
-                Console.WriteLine($"Error loading file: {ex.Message}");
-                currentInputPath = "";
-                currentRawTable = null;
+                // Handle NLP problems
+                var nlpProblem = (NLPProblem)data;
+                
+                Console.WriteLine("✓ NLP problem parsed");
+                Console.WriteLine();
+                Console.WriteLine("Non-Linear Programming file loaded successfully!");
+                Console.WriteLine($"Function: {nlpProblem.Function}");
+                Console.WriteLine($"Starting point: ({nlpProblem.StartingPoint.x}, {nlpProblem.StartingPoint.y})");
+                
+                // Store NLP problem for algorithm selection
+                // TODO: Add NLP storage mechanism similar to Table cache
             }
         }
 
@@ -272,7 +476,7 @@ namespace LinearProgrammingSolver
         {
             Console.Clear();
             
-            if (currentRawTable == null)
+            if (string.IsNullOrEmpty(currentInputPath))
             {
                 Console.WriteLine("Error: No file loaded. Please load a file first.");
                 return;
@@ -286,7 +490,7 @@ namespace LinearProgrammingSolver
                 
                 if (int.TryParse(Console.ReadLine(), out int choice))
                 {
-                    if (choice >= 1 && choice <= 6)
+                    if (choice >= 1 && choice <= 7)
                     {
                         var selectedOption = (AlgorithmOption)choice;
                         
@@ -297,17 +501,44 @@ namespace LinearProgrammingSolver
                                 backToMain = true;
                                 break;
                             case AlgorithmOption.RevisedPrimalSimplex:
-                                Console.WriteLine("Revised Primal Simplex Algorithm - Coming Soon!");
+                                if (currentProblemType != ProblemType.LinearProgramming)
+                                {
+                                    Console.WriteLine("Error: Revised Primal Simplex requires a Linear Programming problem.");
+                                    Console.WriteLine("Please load an LP/IP file or select the NLP algorithm instead.");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Revised Primal Simplex Algorithm - Coming Soon!");
+                                }
                                 break;
                             case AlgorithmOption.BranchBoundSimplex:
                                 ExecuteBranchAndBound();
                                 backToMain = true;
                                 break;
                             case AlgorithmOption.BranchBoundKnapsack:
-                                Console.WriteLine("Branch & Bound Knapsack Algorithm - Coming Soon!");
+                                if (currentProblemType != ProblemType.LinearProgramming)
+                                {
+                                    Console.WriteLine("Error: Branch & Bound Knapsack requires a Linear Programming problem.");
+                                    Console.WriteLine("Please load an LP/IP file or select the NLP algorithm instead.");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Branch & Bound Knapsack Algorithm - Coming Soon!");
+                                }
                                 break;
                             case AlgorithmOption.CuttingPlane:
-                                Console.WriteLine("Cutting Plane Algorithm - Coming Soon!");
+                                if (currentProblemType != ProblemType.LinearProgramming)
+                                {
+                                    Console.WriteLine("Error: Cutting Plane algorithm requires a Linear Programming problem.");
+                                    Console.WriteLine("Please load an LP/IP file or select the NLP algorithm instead.");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Cutting Plane Algorithm - Coming Soon!");
+                                }
+                                break;
+                            case AlgorithmOption.NonLinearProgramming:
+                                ExecuteNonLinearProgramming();
                                 break;
                             case AlgorithmOption.BackToMain:
                                 backToMain = true;
@@ -344,11 +575,12 @@ namespace LinearProgrammingSolver
             Console.WriteLine("║  3. Branch & Bound Simplex     - Integer programming via simplex             ║");
             Console.WriteLine("║  4. Branch & Bound Knapsack    - Specialized knapsack algorithm              ║");
             Console.WriteLine("║  5. Cutting Plane Algorithm    - Integer programming via cutting planes      ║");
-            Console.WriteLine("║  6. Back to Main Menu          - Return to main menu                         ║");
+            Console.WriteLine("║  6. Non-Linear Programming     - Analytical NLP optimization (+10 bonus)     ║");
+            Console.WriteLine("║  7. Back to Main Menu          - Return to main menu                         ║");
             Console.WriteLine("║                                                                              ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
-            Console.Write("Select an algorithm (1-6): ");
+            Console.Write("Select an algorithm (1-7): ");
         }
 
         static void ExecuteBranchAndBound()
@@ -358,6 +590,15 @@ namespace LinearProgrammingSolver
             Console.WriteLine("║                      EXECUTING BRANCH & BOUND SIMPLEX                        ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
+            
+            // Validate problem type
+            if (currentProblemType != ProblemType.LinearProgramming)
+            {
+                Console.WriteLine("Error: Branch & Bound algorithm requires a Linear Programming problem.");
+                Console.WriteLine("The currently loaded file contains a Non-Linear Programming problem.");
+                Console.WriteLine("Please load an LP/IP file (format: max/min ...) or select the NLP algorithm instead.");
+                return;
+            }
             
             try
             {
@@ -472,6 +713,15 @@ namespace LinearProgrammingSolver
             Console.WriteLine("║                        EXECUTING PRIMAL SIMPLEX                              ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
+            
+            // Validate problem type
+            if (currentProblemType != ProblemType.LinearProgramming)
+            {
+                Console.WriteLine("Error: Primal Simplex algorithm requires a Linear Programming problem.");
+                Console.WriteLine("The currently loaded file contains a Non-Linear Programming problem.");
+                Console.WriteLine("Please load an LP/IP file (format: max/min ...) or select the NLP algorithm instead.");
+                return;
+            }
             
             try
             {
@@ -802,6 +1052,130 @@ namespace LinearProgrammingSolver
             catch (Exception ex)
             {
                 Console.WriteLine($"Error exporting Branch & Bound results: {ex.Message}");
+            }
+        }
+
+        static void ExecuteNonLinearProgramming()
+        {
+            Console.Clear();
+            Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║                   EXECUTING NON-LINEAR PROGRAMMING                           ║");
+            Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
+            Console.WriteLine();
+            
+            try
+            {
+                // Validate problem type
+                if (currentProblemType != ProblemType.NonLinearProgramming)
+                {
+                    Console.WriteLine("Error: Non-Linear Programming algorithm requires an NLP problem.");
+                    Console.WriteLine("The currently loaded file contains a Linear Programming problem.");
+                    Console.WriteLine("Please load an NLP file (format: F(x,y) = ...) or select an LP/IP algorithm instead.");
+                    return;
+                }
+                
+                // Check if we have an NLP problem loaded
+                if (string.IsNullOrEmpty(currentInputPath))
+                {
+                    Console.WriteLine("Error: No file loaded. Please load an NLP file first.");
+                    return;
+                }
+                
+                // Re-parse the file to get NLP data
+                var (problemType, data) = fileReader.ParseFile(currentInputPath);
+                
+                var nlpProblem = (NLPProblem)data;
+                
+                Console.WriteLine("Starting Non-Linear Programming optimization...");
+                Console.WriteLine();
+                
+                // Create and execute NLP algorithm
+                var nlpAlgorithm = new NLPAlgorithm();
+                var solution = nlpAlgorithm.SolveNLP(nlpProblem);
+                
+                Console.WriteLine();
+                Console.WriteLine("✓ NLP optimization completed successfully!");
+                Console.WriteLine();
+                
+                // Display comprehensive results
+                nlpAlgorithm.DisplayResults(solution);
+                
+                // Export NLP results to output.txt
+                ExportNLPResults(solution);
+                
+                Console.WriteLine();
+                Console.WriteLine("✓ NLP results exported to data/output.txt");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error executing Non-Linear Programming: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        static void ExportNLPResults(NLPProblem solution)
+        {
+            try
+            {
+                // Ensure data directory exists
+                string dataDir = "data";
+                if (!Directory.Exists(dataDir))
+                {
+                    Directory.CreateDirectory(dataDir);
+                }
+                
+                string outputPath = Path.Combine(dataDir, "output.txt");
+                using (StreamWriter writer = new StreamWriter(outputPath))
+                {
+                    writer.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
+                    writer.WriteLine("║                        NLP OPTIMIZATION RESULTS                              ║");
+                    writer.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
+                    writer.WriteLine();
+                    
+                    writer.WriteLine($"Original Function: f(x,y) = {solution.Function}");
+                    writer.WriteLine($"Starting Point: ({solution.StartingPoint.x}, {solution.StartingPoint.y})");
+                    writer.WriteLine();
+                    
+                    writer.WriteLine("=== OPTIMAL SOLUTION ===");
+                    writer.WriteLine($"Critical Point: ({solution.OptimalPoint.x:F6}, {solution.OptimalPoint.y:F6})");
+                    writer.WriteLine($"Function Value: f({solution.OptimalPoint.x:F3}, {solution.OptimalPoint.y:F3}) = {solution.OptimalValue:F6}");
+                    writer.WriteLine($"Point Type: {solution.PointType}");
+                    writer.WriteLine();
+                    
+                    writer.WriteLine("=== MATHEMATICAL VERIFICATION ===");
+                    writer.WriteLine($"∂f/∂x = {solution.Dx:F6} (should be ≈ 0)");
+                    writer.WriteLine($"∂f/∂y = {solution.Dy:F6} (should be ≈ 0)");
+                    writer.WriteLine();
+                    
+                    writer.WriteLine("Hessian Matrix:");
+                    writer.WriteLine($"H = [{solution.HessianMatrix[0,0]:F3}, {solution.HessianMatrix[0,1]:F3}]");
+                    writer.WriteLine($"    [{solution.HessianMatrix[1,0]:F3}, {solution.HessianMatrix[1,1]:F3}]");
+                    writer.WriteLine();
+                    writer.WriteLine($"Hessian Determinant |H| = {solution.HessianDeterminant:F6}");
+                    
+                    string interpretation = solution.PointType switch
+                    {
+                        CriticalPointType.ConvexLocalMinimum => "|H| > 0 and ∂²f/∂x² > 0 → Local Minimum",
+                        CriticalPointType.ConcaveLocalMaximum => "|H| > 0 and ∂²f/∂x² < 0 → Local Maximum", 
+                        CriticalPointType.SaddlePoint => "|H| < 0 → Saddle Point",
+                        CriticalPointType.Inconclusive => "|H| = 0 → Test Inconclusive",
+                        _ => "Unknown classification"
+                    };
+                    
+                    writer.WriteLine($"Second Derivative Test: {interpretation}");
+                    writer.WriteLine();
+                    
+                    writer.WriteLine("=== CALCULUS DETAILS ===");
+                    writer.WriteLine($"Second derivatives:");
+                    writer.WriteLine($"  ∂²f/∂x² = {solution.Dxx:F6}");
+                    writer.WriteLine($"  ∂²f/∂x∂y = {solution.Dxy:F6}");
+                    writer.WriteLine($"  ∂²f/∂y∂x = {solution.Dyx:F6}");
+                    writer.WriteLine($"  ∂²f/∂y² = {solution.Dyy:F6}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting NLP results: {ex.Message}");
             }
         }
 
