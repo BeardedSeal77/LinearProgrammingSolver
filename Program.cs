@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,7 +80,7 @@ namespace LinearProgrammingSolver
             Console.WriteLine("╚══════╝ ╚═════╝ ╚══════╝ ╚═══╝  ╚══════╝╚═╝  ╚═╝");
             Console.WriteLine();
             Console.WriteLine("═══════════════════════════════════════════════════════════════════════════════");
-            Console.WriteLine("        LPR 381 Project - Menu-Driven LP/IP Solver by Edward Cullinan");
+            Console.WriteLine("        LPR 381 Project - Menu-Driven LP/IP Solver");
             Console.WriteLine("═══════════════════════════════════════════════════════════════════════════════");
             Console.WriteLine();
             
@@ -171,14 +171,14 @@ namespace LinearProgrammingSolver
         static void DisplayMainMenu()
         {
             Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                              MAIN MENU                                      ║");
+            Console.WriteLine("║                              MAIN MENU                                       ║");
             Console.WriteLine("╠══════════════════════════════════════════════════════════════════════════════╣");
             Console.WriteLine("║                                                                              ║");
-            Console.WriteLine("║  1. Load Input File          - Load LP/IP model from text file             ║");
+            Console.WriteLine("║  1. Load Input File          - Load LP/IP model from text file               ║");
             Console.WriteLine("║  2. Select Algorithm          - Choose solving algorithm                     ║");
-            Console.WriteLine("║  3. Sensitivity Analysis      - Perform post-solution analysis              ║");
-            Console.WriteLine("║  4. View Results              - Display solution and tables                 ║");
-            Console.WriteLine("║  5. Exit                      - Close the program                           ║");
+            Console.WriteLine("║  3. Sensitivity Analysis      - Perform post-solution analysis               ║");
+            Console.WriteLine("║  4. View Results              - Display solution and tables                  ║");
+            Console.WriteLine("║  5. Exit                      - Close the program                            ║");
             Console.WriteLine("║                                                                              ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
@@ -201,7 +201,7 @@ namespace LinearProgrammingSolver
         {
             Console.Clear();
             Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                            LOAD INPUT FILE                                    ║");
+            Console.WriteLine("║                            LOAD INPUT FILE                                   ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
             
@@ -341,7 +341,7 @@ namespace LinearProgrammingSolver
         static void DisplayAlgorithmMenu()
         {
             Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                         ALGORITHM SELECTION                                    ║");
+            Console.WriteLine("║                         ALGORITHM SELECTION                                  ║");
             Console.WriteLine("╠══════════════════════════════════════════════════════════════════════════════╣");
             Console.WriteLine("║                                                                              ║");
             Console.WriteLine("║  1. Primal Simplex             - Standard simplex algorithm                  ║");
@@ -474,7 +474,7 @@ namespace LinearProgrammingSolver
         {
             Console.Clear();
             Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                        EXECUTING PRIMAL SIMPLEX                               ║");
+            Console.WriteLine("║                        EXECUTING PRIMAL SIMPLEX                              ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
             
@@ -625,25 +625,25 @@ namespace LinearProgrammingSolver
             Console.WriteLine("║                       SENSITIVITY ANALYSIS                                   ║");
             Console.WriteLine("╠══════════════════════════════════════════════════════════════════════════════╣");
             Console.WriteLine("║                                                                              ║");
-            Console.WriteLine("║  Variable Analysis:                                                           ║");
-            Console.WriteLine("║    1. Non-Basic Variable Range     - Display range analysis                   ║");
+            Console.WriteLine("║  Variable Analysis:                                                          ║");
+            Console.WriteLine("║    1. Non-Basic Variable Range     - Display range analysis                  ║");
             Console.WriteLine("║    2. Non-Basic Variable Change    - Apply and display changes               ║");
-            Console.WriteLine("║    3. Basic Variable Range         - Display range analysis                   ║");
+            Console.WriteLine("║    3. Basic Variable Range         - Display range analysis                  ║");
             Console.WriteLine("║    4. Basic Variable Change        - Apply and display changes               ║");
             Console.WriteLine("║    5. Variable in Non-Basic Range  - Column range analysis                   ║");
             Console.WriteLine("║    6. Variable in Non-Basic Change - Column change analysis                  ║");
             Console.WriteLine("║                                                                              ║");
-            Console.WriteLine("║  Constraint Analysis:                                                         ║");
+            Console.WriteLine("║  Constraint Analysis:                                                        ║");
             Console.WriteLine("║    7. Constraint RHS Range         - Right-hand-side range analysis          ║");
             Console.WriteLine("║    8. Constraint RHS Change        - Right-hand-side change analysis         ║");
             Console.WriteLine("║                                                                              ║");
-            Console.WriteLine("║  Solution Modifications:                                                      ║");
-            Console.WriteLine("║    9. Add New Activity             - Add new variable to solution             ║");
+            Console.WriteLine("║  Solution Modifications:                                                     ║");
+            Console.WriteLine("║    9. Add New Activity             - Add new variable to solution            ║");
             Console.WriteLine("║   10. Add New Constraint          - Add new constraint to solution           ║");
             Console.WriteLine("║   11. Show Shadow Prices          - Display shadow price analysis            ║");
             Console.WriteLine("║                                                                              ║");
-            Console.WriteLine("║  Duality Analysis:                                                            ║");
-            Console.WriteLine("║   12. Duality Analysis            - Dual model analysis and verification      ║");
+            Console.WriteLine("║  Duality Analysis:                                                           ║");
+            Console.WriteLine("║   12. Duality Analysis            - Dual model analysis and verification     ║");
             Console.WriteLine("║                                                                              ║");
             Console.WriteLine("║   13. Back to Main Menu           - Return to main menu                      ║");
             Console.WriteLine("║                                                                              ║");
@@ -656,7 +656,7 @@ namespace LinearProgrammingSolver
         {
             Console.Clear();
             Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                            VIEW RESULTS                                       ║");
+            Console.WriteLine("║                            VIEW RESULTS                                      ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
             
