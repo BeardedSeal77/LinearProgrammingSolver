@@ -84,11 +84,6 @@ namespace LinearProgrammingSolver
             Console.WriteLine("═══════════════════════════════════════════════════════════════════════════════");
             Console.WriteLine();
             
-            // DEBUG: Test dual simplex
-            TestDualSimplex.TestEnteringVariable();
-            Console.WriteLine("\nPress Enter to continue...");
-            Console.ReadLine();
-            
             // Main application loop
             RunMainMenu();
         }
@@ -457,7 +452,7 @@ namespace LinearProgrammingSolver
                 ExportBranchAndBoundResults(branchAndBound);
                 
                 Console.WriteLine();
-                Console.WriteLine("✓ Branch & Bound results exported to output.txt");
+                Console.WriteLine("✓ Branch & Bound results exported to data/output.txt");
                 
                 // Display table summary
                 Console.WriteLine();
@@ -517,7 +512,7 @@ namespace LinearProgrammingSolver
                 ExportResults();
                 
                 Console.WriteLine();
-                Console.WriteLine("Solution exported to output.txt");
+                Console.WriteLine("Solution exported to data/output.txt");
                 
                 // Display table summary
                 Console.WriteLine();
@@ -711,7 +706,15 @@ namespace LinearProgrammingSolver
         {
             try
             {
-                using (StreamWriter writer = new StreamWriter("output.txt"))
+                // Ensure data directory exists
+                string dataDir = "data";
+                if (!Directory.Exists(dataDir))
+                {
+                    Directory.CreateDirectory(dataDir);
+                }
+                
+                string outputPath = Path.Combine(dataDir, "output.txt");
+                using (StreamWriter writer = new StreamWriter(outputPath))
                 {
                     // Write canonical form
                     var canonicalTable = TableCache.GetTable("t-i");
@@ -806,7 +809,15 @@ namespace LinearProgrammingSolver
         {
             try
             {
-                using (StreamWriter writer = new StreamWriter("output.txt"))
+                // Ensure data directory exists
+                string dataDir = "data";
+                if (!Directory.Exists(dataDir))
+                {
+                    Directory.CreateDirectory(dataDir);
+                }
+                
+                string outputPath = Path.Combine(dataDir, "output.txt");
+                using (StreamWriter writer = new StreamWriter(outputPath))
                 {
                     var initialTable = TableCache.GetTable("t-i");
                     if (initialTable != null)

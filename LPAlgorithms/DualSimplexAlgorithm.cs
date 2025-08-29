@@ -54,7 +54,6 @@ namespace LinearProgrammingSolver.LPAlgorithms
             int leavingRow = SelectLeavingVariable(currentTable);
             if (leavingRow == -1)
             {
-                Console.WriteLine($"DEBUG: No leaving variable found for {currentTable.TableId}");
                 var infeasibleTable = new Table($"{currentTable.TableId}-infeasible", currentTable, "Infeasible");
                 return infeasibleTable;
             }
@@ -62,12 +61,10 @@ namespace LinearProgrammingSolver.LPAlgorithms
             int enteringColumn = SelectEnteringVariable(currentTable, leavingRow);
             if (enteringColumn == -1)
             {
-                Console.WriteLine($"DEBUG: No entering variable found for {currentTable.TableId}, leaving row {leavingRow}");
                 var infeasibleTable = new Table($"{currentTable.TableId}-infeasible", currentTable, "Infeasible");
                 return infeasibleTable;
             }
 
-            Console.WriteLine($"DEBUG: {currentTable.TableId} - Pivot: leaving row {leavingRow}, entering col {enteringColumn}");
             Table newTable = PerformPivotOperation(currentTable, leavingRow, enteringColumn);
             UpdateBasicVariables(newTable, leavingRow, enteringColumn);
 
@@ -97,7 +94,7 @@ namespace LinearProgrammingSolver.LPAlgorithms
         {
             int rhsCol = table.GetColumnCount() - 1;
             int bestColumn = -1;
-            double bestRatio = double.NegativeInfinity; // Changed from PositiveInfinity to NegativeInfinity
+            double bestRatio = double.NegativeInfinity;
             
             // Check if this is a Branch & Bound constraint row (has negative RHS)
             double rhsValue = table.GetElement(leavingRow, rhsCol);
@@ -105,17 +102,13 @@ namespace LinearProgrammingSolver.LPAlgorithms
             
             if (isBranchConstraint)
             {
-                // For Branch & Bound constraints, we need to distinguish between A-side (≤) and B-side (≥)
-                // A-side: Allow normal pivoting (can use auxiliary variables)
-                // B-side: Only allow pivots that genuinely satisfy the constraint
-                
                 // Check if this is a B-side constraint by looking for excess variables (e prefix)
                 bool isBSideConstraint = false;
                 for (int j = 0; j < table.ColumnLabels.Count && j < rhsCol; j++)
                 {
                     string colLabel = table.ColumnLabels[j];
                     double element = table.GetElement(leavingRow, j);
-                    if (colLabel.StartsWith("e") && Math.Abs(element - 1.0) < 0.001) // excess variable with +1 coefficient
+                    if (colLabel.StartsWith("e") && Math.Abs(element - 1.0) < 0.001)
                     {
                         isBSideConstraint = true;
                         break;
@@ -124,8 +117,7 @@ namespace LinearProgrammingSolver.LPAlgorithms
                 
                 if (isBSideConstraint)
                 {
-                    // B-side constraint: Allow normal dual simplex pivoting (including slack/surplus variables)
-                    // This is different from our original restriction - B-side can still use auxiliary variables
+                    // B-side constraint: Allow normal dual simplex pivoting
                     for (int j = 0; j < rhsCol; j++)
                     {
                         double leavingRowElement = table.GetElement(leavingRow, j);
@@ -134,7 +126,7 @@ namespace LinearProgrammingSolver.LPAlgorithms
                         if (leavingRowElement < -0.001)
                         {
                             double ratio = objectiveElement / leavingRowElement;
-                            if (ratio > bestRatio) // Changed from < to > to select maximum ratio
+                            if (ratio > bestRatio)
                             {
                                 bestRatio = ratio;
                                 bestColumn = j;
@@ -153,7 +145,7 @@ namespace LinearProgrammingSolver.LPAlgorithms
                         if (leavingRowElement < -0.001)
                         {
                             double ratio = objectiveElement / leavingRowElement;
-                            if (ratio > bestRatio) // Changed from < to > to select maximum ratio
+                            if (ratio > bestRatio)
                             {
                                 bestRatio = ratio;
                                 bestColumn = j;
@@ -173,9 +165,9 @@ namespace LinearProgrammingSolver.LPAlgorithms
                     if (leavingRowElement < -0.001)
                     {
                         double ratio = objectiveElement / leavingRowElement;
-                        if (ratio < minRatio)
+                        if (ratio > bestRatio) // Changed from < to > to select maximum ratio
                         {
-                            minRatio = ratio;
+                            bestRatio = ratio;
                             bestColumn = j;
                         }
                     }

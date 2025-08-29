@@ -145,8 +145,8 @@ namespace LinearProgrammingSolver.Tables
             }
             
             Console.WriteLine("\nStored Tables:");
-            Console.WriteLine("TableID".PadRight(15) + "Status".PadRight(12) + "Size".PadRight(10) + "Created");
-            Console.WriteLine(new string('-', 50));
+            Console.WriteLine("TableID".PadRight(20) + "Status".PadRight(25) + "Size".PadRight(8) + "Created");
+            Console.WriteLine(new string('-', 65));
             
             foreach (var kvp in _tableCache.OrderBy(x => x.Value.CreatedTime))
             {
@@ -154,7 +154,10 @@ namespace LinearProgrammingSolver.Tables
                 string size = $"{table.GetRowCount()}x{table.GetColumnCount()}";
                 string created = table.CreatedTime.ToString("HH:mm:ss");
                 
-                Console.WriteLine($"{table.TableId.PadRight(15)}{table.Status.PadRight(12)}{size.PadRight(10)}{created}");
+                // Truncate long status messages for better formatting
+                string status = table.Status.Length > 24 ? table.Status.Substring(0, 21) + "..." : table.Status;
+                
+                Console.WriteLine($"{table.TableId.PadRight(20)}{status.PadRight(25)}{size.PadRight(8)}{created}");
             }
         }
         

@@ -170,7 +170,6 @@ namespace LinearProgrammingSolver.IPAlgorithms
             var subproblems = new List<Table>();
             if (branchingInfo == null) return subproblems;
             
-            Console.WriteLine($"DEBUG: Branching on {branchingInfo}");
 
             var subproblemA = CreateSubproblemWithConstraint(parentTable, branchingInfo, branchingInfo.FloorValue, true, "A");
             var subproblemB = CreateSubproblemWithConstraint(parentTable, branchingInfo, branchingInfo.CeilValue, false, "B"); 
@@ -378,7 +377,7 @@ namespace LinearProgrammingSolver.IPAlgorithms
             
             // CRITICAL: Perform row manipulation BEFORE adding new basic variable
             // This ensures we use the original basic variables list
-            PerformRowManipulation(newTable, branchingInfo, oldRows, isUpperBound, parentTable.BasicVariables);
+            PerformRowManipulation(newTable, branchingInfo, oldRows, isUpperBound);
             
             // Now add the new basic variable after manipulation
             newTable.BasicVariables.Add(isUpperBound ? $"s{oldRows}" : $"e{oldRows}");
@@ -406,33 +405,15 @@ namespace LinearProgrammingSolver.IPAlgorithms
             return _bestIntegerSolution;
         }
 
-        private double GetVariableValue(Table table, string variableName)
-        {
-            for (int i = 0; i < table.BasicVariables.Count; i++)
-            {
-                if (table.BasicVariables[i] == variableName)
-                {
-                    return table.GetElement(i + 1, table.GetColumnCount() - 1);
-                }
-            }
-            return 0.0; // Non-basic variable
-        }
-
-        private void PerformRowManipulation(Table table, BranchingVariableInfo branchingInfo, int newConstraintRow, bool isUpperBound, List<string> originalBasicVariables)
+        private void PerformRowManipulation(Table table, BranchingVariableInfo branchingInfo, int newConstraintRow, bool isUpperBound)
         {
             // Use pre-stored basic row information - no searching needed!
             int basicVarRow = branchingInfo.BasicRowIndex;
-            
-            Console.WriteLine($"DEBUG: Creating constraint for {branchingInfo.VariableName} {(isUpperBound ? "<=" : ">=")} {(isUpperBound ? branchingInfo.FloorValue : branchingInfo.CeilValue)}");
-            Console.WriteLine($"DEBUG: Using pre-stored basic row {basicVarRow} for {branchingInfo.VariableName}");
-            
-            // Remove debug - constraint generation is confirmed correct
             
             // Different row manipulations for ≤ and ≥ constraints
             if (isUpperBound)
             {
                 // For x ≤ bound (Subproblem A): (basic_row - constraint_row) * -1
-                // This creates negative RHS for dual simplex to resolve
                 for (int j = 0; j < table.GetColumnCount(); j++)
                 {
                     double basicRowValue = table.GetElement(basicVarRow, j);
@@ -440,13 +421,10 @@ namespace LinearProgrammingSolver.IPAlgorithms
                     double newValue = (basicRowValue - constraintValue) * -1.0;
                     table.SetElement(newConstraintRow, j, newValue);
                 }
-                
-                // Constraint generation confirmed correct
             }
             else
             {
-                // For x ≥ bound (Subproblem B): basic_row - constraint_row  
-                // This creates the true mathematical constraint representing infeasibility
+                // For x ≥ bound (Subproblem B): basic_row - constraint_row
                 for (int j = 0; j < table.GetColumnCount(); j++)
                 {
                     double basicRowValue = table.GetElement(basicVarRow, j);

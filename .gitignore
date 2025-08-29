@@ -383,3 +383,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /_GroupMembers
+/_old
