@@ -5,7 +5,7 @@ using System.Linq;
 using LinearProgrammingSolver.Utils;
 using LinearProgrammingSolver.Tables;
 using LinearProgrammingSolver.LPAlgorithms;
-// using LinearProgrammingSolver.IPAlgorithms;
+using LinearProgrammingSolver.IPAlgorithms;
 
 namespace LinearProgrammingSolver
 {
@@ -83,6 +83,11 @@ namespace LinearProgrammingSolver
             Console.WriteLine("        LPR 381 Project - Menu-Driven LP/IP Solver by Edward Cullinan");
             Console.WriteLine("═══════════════════════════════════════════════════════════════════════════════");
             Console.WriteLine();
+            
+            // DEBUG: Test dual simplex
+            TestDualSimplex.TestEnteringVariable();
+            Console.WriteLine("\nPress Enter to continue...");
+            Console.ReadLine();
             
             // Main application loop
             RunMainMenu();
@@ -300,7 +305,8 @@ namespace LinearProgrammingSolver
                                 Console.WriteLine("Revised Primal Simplex Algorithm - Coming Soon!");
                                 break;
                             case AlgorithmOption.BranchBoundSimplex:
-                                Console.WriteLine("Branch & Bound Simplex Algorithm - Coming Soon!");
+                                ExecuteBranchAndBound();
+                                backToMain = true;
                                 break;
                             case AlgorithmOption.BranchBoundKnapsack:
                                 Console.WriteLine("Branch & Bound Knapsack Algorithm - Coming Soon!");
@@ -348,6 +354,120 @@ namespace LinearProgrammingSolver
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
             Console.Write("Select an algorithm (1-6): ");
+        }
+
+        static void ExecuteBranchAndBound()
+        {
+            Console.Clear();
+            Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║                      EXECUTING BRANCH & BOUND SIMPLEX                        ║");
+            Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
+            Console.WriteLine();
+            
+            try
+            {
+                // Check if canonical table exists
+                var canonical = TableCache.GetTable("t-i");
+                if (canonical == null)
+                {
+                    Console.WriteLine("Error: No canonical table found. Please load a file first.");
+                    return;
+                }
+                
+                // Check if optimal table exists
+                var optimalTable = TableCache.GetTable("t-optimal");
+                
+                if (optimalTable == null)
+                {
+                    Console.WriteLine("No optimal LP solution found in cache. Running Primal Simplex first...");
+                    Console.WriteLine();
+                    
+                    // Automatically run Primal Simplex
+                    var primalSimplex = new PrimalSimplexAlgorithm();
+                    optimalTable = primalSimplex.SolveLP(canonical);
+                    
+                    if (optimalTable == null || !optimalTable.IsOptimal())
+                    {
+                        Console.WriteLine($"Error: LP relaxation could not be solved optimally. Status: {optimalTable?.Status ?? "null"}");
+                        return;
+                    }
+                    
+                    Console.WriteLine($"✓ LP relaxation solved with objective value: {optimalTable.GetObjectiveValue():F3}");
+                    Console.WriteLine();
+                }
+                else
+                {
+                    Console.WriteLine($"Found existing optimal LP solution with objective value: {optimalTable.GetObjectiveValue():F3}");
+                    Console.WriteLine();
+                }
+                
+                // Start Branch & Bound
+                Console.WriteLine("Starting Branch & Bound Integer Programming...");
+                Console.WriteLine();
+                
+                var branchAndBound = new BranchAndBoundAlgorithm();
+                var integerSolution = branchAndBound.SolveIP(optimalTable);
+                
+                // Display processing results
+                Console.WriteLine("=== BRANCH & BOUND PROCESSING LOG ===" );
+                var processingOrder = branchAndBound.GetProcessingOrder();
+                foreach (var logEntry in processingOrder)
+                {
+                    Console.WriteLine(logEntry);
+                }
+                
+                // Display fathoming reasons
+                Console.WriteLine("\n=== FATHOMING REASONS ===");
+                var fathomReasons = branchAndBound.GetFathomReasons();
+                foreach (var kvp in fathomReasons)
+                {
+                    Console.WriteLine($"{kvp.Key}: {kvp.Value}");
+                }
+                
+                // Display best integer solution
+                Console.WriteLine("\n=== BEST INTEGER SOLUTION ===");
+                if (integerSolution != null)
+                {
+                    Console.WriteLine($"✓ Integer solution found!");
+                    Console.WriteLine($"Table ID: {integerSolution.TableId}");
+                    Console.WriteLine($"Objective Value: {integerSolution.GetObjectiveValue():F3}");
+                    Console.WriteLine("Basic variables and values:");
+                    for (int i = 0; i < integerSolution.BasicVariables.Count; i++)
+                    {
+                        var varName = integerSolution.BasicVariables[i];
+                        var value = integerSolution.GetElement(i + 1, integerSolution.GetColumnCount() - 1);
+                        Console.WriteLine($"  {varName} = {value:F3}");
+                    }
+                    
+                    currentOptimalTable = integerSolution; // Update for sensitivity analysis
+                }
+                else
+                {
+                    Console.WriteLine("No integer solution found!");
+                }
+                
+                // Display summary
+                var allSubproblems = branchAndBound.GetAllSubproblems();
+                Console.WriteLine($"\n=== SUMMARY ===");
+                Console.WriteLine($"Total subproblems generated: {allSubproblems.Count}");
+                Console.WriteLine($"Processing steps: {processingOrder.Count}");
+                Console.WriteLine($"Fathomed nodes: {fathomReasons.Count}");
+                
+                // Export to output.txt (project requirement)
+                ExportBranchAndBoundResults(branchAndBound);
+                
+                Console.WriteLine();
+                Console.WriteLine("✓ Branch & Bound results exported to output.txt");
+                
+                // Display table summary
+                Console.WriteLine();
+                TableCache.DisplayTableSummary();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error executing Branch & Bound: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            }
         }
 
         static void ExecutePrimalSimplex()
@@ -587,6 +707,101 @@ namespace LinearProgrammingSolver
             }
         }
 
+        static void ExportBranchAndBoundResults(BranchAndBoundAlgorithm branchAndBound)
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter("output.txt"))
+                {
+                    // Write canonical form
+                    var canonicalTable = TableCache.GetTable("t-i");
+                    if (canonicalTable != null)
+                    {
+                        writer.WriteLine("=== CANONICAL FORM ===");
+                        writer.WriteLine(canonicalTable.ToString());
+                        writer.WriteLine();
+                    }
+                    
+                    // Write LP optimal solution
+                    var lpOptimal = TableCache.GetTable("t-optimal");
+                    if (lpOptimal != null)
+                    {
+                        writer.WriteLine("=== LP RELAXATION OPTIMAL SOLUTION ===");
+                        writer.WriteLine($"Table ID: {lpOptimal.TableId}");
+                        writer.WriteLine($"Objective Value: {lpOptimal.GetObjectiveValue():F3}");
+                        writer.WriteLine(lpOptimal.ToString());
+                        writer.WriteLine();
+                    }
+                    
+                    // Write processing order
+                    writer.WriteLine("=== BRANCH & BOUND PROCESSING LOG ===");
+                    var processingOrder = branchAndBound.GetProcessingOrder();
+                    foreach (var logEntry in processingOrder)
+                    {
+                        writer.WriteLine(logEntry);
+                    }
+                    writer.WriteLine();
+                    
+                    // Write all subproblem tables
+                    writer.WriteLine("=== ALL SUBPROBLEM TABLES ===");
+                    foreach (var table in TableCache.GetAllTables().Where(t => 
+                        t.TableId.Contains("-A") || t.TableId.Contains("-B") || 
+                        t.Status == "Iteration" || t.Status == "Optimal" || 
+                        t.Status == "Infeasible" || t.Status.StartsWith("Fathomed")))
+                    {
+                        writer.WriteLine($"Table {table.TableId} ({table.Status}):");
+                        writer.WriteLine($"Objective Value: {table.GetObjectiveValue():F3}");
+                        writer.WriteLine(table.ToString());
+                        writer.WriteLine();
+                    }
+                    
+                    // Write fathoming reasons
+                    writer.WriteLine("=== FATHOMING REASONS ===");
+                    var fathomReasons = branchAndBound.GetFathomReasons();
+                    foreach (var kvp in fathomReasons)
+                    {
+                        writer.WriteLine($"{kvp.Key}: {kvp.Value}");
+                    }
+                    writer.WriteLine();
+                    
+                    // Write best integer solution
+                    var bestSolution = branchAndBound.GetBestIntegerSolution();
+                    writer.WriteLine("=== BEST INTEGER SOLUTION ===");
+                    if (bestSolution != null)
+                    {
+                        writer.WriteLine($"Table ID: {bestSolution.TableId}");
+                        writer.WriteLine($"Objective Value: {bestSolution.GetObjectiveValue():F3}");
+                        writer.WriteLine("Basic variables and values:");
+                        for (int i = 0; i < bestSolution.BasicVariables.Count; i++)
+                        {
+                            var varName = bestSolution.BasicVariables[i];
+                            var value = bestSolution.GetElement(i + 1, bestSolution.GetColumnCount() - 1);
+                            writer.WriteLine($"  {varName} = {value:F3}");
+                        }
+                        writer.WriteLine();
+                        writer.WriteLine("Final Table:");
+                        writer.WriteLine(bestSolution.ToString());
+                    }
+                    else
+                    {
+                        writer.WriteLine("No integer solution found!");
+                    }
+                    
+                    // Write summary
+                    var allSubproblems = branchAndBound.GetAllSubproblems();
+                    writer.WriteLine();
+                    writer.WriteLine("=== SUMMARY ===");
+                    writer.WriteLine($"Total subproblems generated: {allSubproblems.Count}");
+                    writer.WriteLine($"Processing steps: {processingOrder.Count}");
+                    writer.WriteLine($"Fathomed nodes: {fathomReasons.Count}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting Branch & Bound results: {ex.Message}");
+            }
+        }
+
         static void ExportResults()
         {
             try
@@ -614,5 +829,6 @@ namespace LinearProgrammingSolver
                 Console.WriteLine($"Error exporting results: {ex.Message}");
             }
         }
+
     }
 }

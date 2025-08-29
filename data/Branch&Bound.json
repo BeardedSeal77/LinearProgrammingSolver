@@ -1,0 +1,556 @@
+{
+  "initial_problem": {
+    "objective": {
+      "direction": "maximize",
+      "coefficients": [8, 5]
+    },
+    "constraints": [
+      {"coefficients": [1, 1], "operator": "<=", "rhs": 6},
+      {"coefficients": [9, 5], "operator": "<=", "rhs": 45}
+    ],
+    "variables": ["x1", "x2"],
+    "variable_types": {"x1": "binary", "x2": "binary"}
+  },
+  
+  "tables": {
+    "t-initial": {
+      "tableId": "t-initial",
+      "matrix": [
+        [-8, -5, 0, 0, 0],
+        [1, 1, 1, 0, 6],
+        [9, 5, 0, 1, 45]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "RHS"],
+      "basicVariables": ["s1", "s2"],
+      "optimizationType": "Maximize",
+      "status": "Canonical",
+      "constraintOperators": {
+        "C1": "LessThanOrEqual",
+        "C2": "LessThanOrEqual"
+      }
+    },
+    
+    "t-2": {
+      "tableId": "t-2",
+      "matrix": [
+        [0, -0.556, 0, 0.889, 40],
+        [0, 0.444, 1, -0.111, 1],
+        [1, 0.556, 0, 0.111, 5]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "RHS"],
+      "basicVariables": ["s1", "x1"],
+      "optimizationType": "Maximize",
+      "status": "Iteration"
+    },
+    
+    "t-optimal": {
+      "tableId": "t-optimal",
+      "matrix": [
+        [0, 0, 1.25, 0.75, 41.25],
+        [0, 1, 2.25, -0.25, 2.25],
+        [1, 0, -1.25, 0.25, 3.75]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "RHS"],
+      "basicVariables": ["x2", "x1"],
+      "optimizationType": "Maximize",
+      "status": "Optimal",
+      "solution": {"x1": 3.75, "x2": 2.25, "objective_value": 41.25}
+    },
+    
+    "t-optimal-Ai": {
+      "tableId": "t-optimal-Ai",
+      "matrix": [
+        [0, 0, 1.25, 0.75, 0, 41.25],
+        [0, 1, 2.25, -0.25, 0, 2.25],
+        [1, 0, -1.25, 0.25, 0, 3.75],
+        [1, 0, 0, 0, 1, 3],
+        [0, 0, 1.25, -0.25, 1, -0.75]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "temp3", "temp(2-3)*-1"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "s3", "RHS"],
+      "basicVariables": ["x2", "x1", "s3"],
+      "optimizationType": "Maximize",
+      "status": "Constraint_Creation_Process",
+      "branch_constraint": "x1 <= 3",
+      "constraint_creation": {
+        "branching_variable": "x1",
+        "using_row": "row 2 (has basic x1)",
+        "temp3_constraint": "sets x1 <= 3 with slack s3",
+        "temp_calculation": "(row2 - temp3) * -1 = ([1,0,-1.25,0.25,0,3.75] - [1,0,0,0,1,3]) * -1",
+        "temp_result": "[0,0,1.25,-0.25,1,-0.75]",
+        "creates_negative_rhs": true,
+        "note": "A branch uses slack variable and multiplies by -1 to create negative RHS for dual simplex"
+      }
+    },
+
+    "t-optimal-A1": {
+      "tableId": "t-optimal-A1",
+      "matrix": [
+        [0, 0, 5, 0, 3, 39],
+        [0, 1, 1, 0, -1, 3],
+        [1, 0, 0, 0, 1, 3],
+        [0, 0, -5, 1, -4, 3]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "s3", "RHS"],
+      "basicVariables": ["x2", "x1", "s2"],
+      "optimizationType": "Maximize",
+      "status": "Optimal",
+      "solution": {"x1": 3, "x2": 3, "objective_value": 39},
+      "branch_constraint": "x1 <= 3",
+      "manipulation_performed": "Row 3 = (Row 2 - temp3) * -1"
+    },
+    
+    "t-optimal-Bi": {
+      "tableId": "t-optimal-Bi",
+      "matrix": [
+        [0, 0, 1.25, 0.75, 0, 41.25],
+        [0, 1, 2.25, -0.25, 0, 2.25],
+        [1, 0, -1.25, 0.25, 0, 3.75],
+        [1, 0, 0, 0, -1, 4],
+        [0, 0, -1.25, 0.25, 1, -0.25]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "temp3", "temp(2-3)"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "RHS"],
+      "basicVariables": ["x2", "x1", "e3"],
+      "optimizationType": "Maximize",
+      "status": "Constraint_Creation_Process",
+      "branch_constraint": "x1 >= 4",
+      "constraint_creation": {
+        "branching_variable": "x1",
+        "using_row": "row 2 (has basic x1)",
+        "temp3_constraint": "sets x1 >= 4 with excess e3",
+        "temp_calculation": "(row2 - temp3) = ([1,0,-1.25,0.25,0,3.75] - [1,0,0,0,-1,4])",
+        "temp_result": "[0,0,-1.25,0.25,1,-0.25]",
+        "creates_negative_rhs": true,
+        "note": "B branch uses excess variable without multiplication to create negative RHS for dual simplex"
+      }
+    },
+
+    "t-optimal-B1": {
+      "tableId": "t-optimal-B1",
+      "matrix": [
+        [0, 0, 0, 1, 1, 41],
+        [0, 1, 0, 0.2, 1.8, 1.8],
+        [1, 0, 0, 0, -1, 4],
+        [0, 0, 1, -0.2, -0.8, 0.2]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "RHS"],
+      "basicVariables": ["x2", "x1", "s1"],
+      "optimizationType": "Maximize",
+      "status": "Optimal",
+      "solution": {"x1": 4, "x2": 1.8, "objective_value": 41},
+      "branch_constraint": "x1 >= 4",
+      "manipulation_performed": "Row 3 = (Row 2 - temp3)"
+    },
+    
+    "t-optimal-B1-Ai": {
+      "tableId": "t-optimal-B1-Ai",
+      "matrix": [
+        [0, 0, 0, 1, 1, 0, 41],
+        [0, 1, 0, 0.2, 1.8, 0, 1.8],
+        [1, 0, 0, 0, -1, 0, 4],
+        [0, 0, 1, -0.2, -0.8, 0, 0.2],
+        [0, 1, 0, 0, 0, 1, 1],
+        [0, 0, 0, -0.2, -1.8, 1, -0.8]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3", "temp4", "temp(1-4)*-1"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "s4", "RHS"],
+      "basicVariables": ["x2", "x1", "s1", "s4"],
+      "optimizationType": "Maximize",
+      "status": "Constraint_Creation_Process",
+      "branch_constraint": "x2 <= 1",
+      "constraint_creation": {
+        "branching_variable": "x2",
+        "using_row": "row 1 (has basic x2)",
+        "temp4_constraint": "sets x2 <= 1 with slack s4",
+        "temp_calculation": "(row1 - temp4) * -1 = ([0,1,0,0.2,1.8,0,1.8] - [0,1,0,0,0,1,1]) * -1",
+        "temp_result": "[0,0,0,-0.2,-1.8,1,-0.8]",
+        "creates_negative_rhs": true,
+        "note": "A branch uses slack variable and multiplies by -1 to create negative RHS for dual simplex"
+      }
+    },
+
+    "t-optimal-B1-A1": {
+      "tableId": "t-optimal-B1-A1",
+      "matrix": [
+        [0, 0, 0, 0.889, 0, 0.556, 40.556],
+        [0, 1, 0, 0, 0, 1, 1],
+        [1, 0, 0, 0.111, 0, -0.556, 4.444],
+        [0, 0, 1, -0.111, 0, -0.444, 0.556],
+        [0, 0, 0, 0.111, 1, -0.556, 0.444]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3", "C4"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "s4", "RHS"],
+      "basicVariables": ["x2", "x1", "s1", "e3"],
+      "optimizationType": "Maximize",
+      "status": "Optimal",
+      "solution": {"x1": 4.444, "x2": 1, "objective_value": 40.556},
+      "branch_constraint": "x2 <= 1",
+      "manipulation_performed": "Row 4 = (Row 1 - temp4) * -1"
+    },
+    
+    "t-optimal-B1-A1-Ai": {
+      "tableId": "t-optimal-B1-A1-Ai",
+      "matrix": [
+        [0, 0, 0, 0.889, 0, 0.556, 0, 40.556],
+        [0, 1, 0, 0, 0, 1, 0, 1],
+        [1, 0, 0, 0.111, 0, -0.556, 0, 4.444],
+        [0, 0, 1, -0.111, 0, -0.444, 0, 0.556],
+        [0, 0, 0, 0.111, 1, -0.556, 0, 0.444],
+        [1, 0, 0, 0, 0, 0, 1, 4],
+        [0, 0, 0, -0.111, 0, 0.556, 1, -0.444]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3", "C4", "temp5", "temp(2-5)*-1"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "s4", "s5", "RHS"],
+      "basicVariables": ["x2", "x1", "s1", "e3", "s5"],
+      "optimizationType": "Maximize",
+      "status": "Constraint_Creation_Process",
+      "branch_constraint": "x1 <= 4",
+      "constraint_creation": {
+        "branching_variable": "x1",
+        "using_row": "row 2 (has basic x1)",
+        "temp5_constraint": "sets x1 <= 4 with slack s5",
+        "temp_calculation": "(row2 - temp5) * -1 = ([1,0,0,0.111,0,-0.556,0,4.444] - [1,0,0,0,0,0,1,4]) * -1",
+        "temp_result": "[0,0,0,-0.111,0,0.556,1,-0.444]",
+        "creates_negative_rhs": true,
+        "note": "A branch uses slack variable and multiplies by -1 to create negative RHS for dual simplex"
+      }
+    },
+
+    "t-optimal-B1-A1-A1": {
+      "tableId": "t-optimal-B1-A1-A1",
+      "matrix": [
+        [0, 0, 0, 0, 0, 5, 8, 37],
+        [0, 1, 0, 0, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1, 4],
+        [0, 0, 1, 0, 0, -1, -1, 1],
+        [0, 0, 0, 0, 1, 0, 1, 0],
+        [0, 0, 0, 1, 0, -5, -9, 4]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3", "C4", "C5"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "s4", "s5", "RHS"],
+      "basicVariables": ["x2", "x1", "s1", "e3", "s2"],
+      "optimizationType": "Maximize",
+      "status": "Optimal",
+      "solution": {"x1": 4, "x2": 1, "objective_value": 37},
+      "branch_constraint": "x1 <= 4",
+      "manipulation_performed": "Row 5 = (Row 2 - temp5) * -1"
+    },
+    
+    "t-optimal-B1-A1-Bi": {
+      "tableId": "t-optimal-B1-A1-Bi",
+      "matrix": [
+        [0, 0, 0, 0.889, 0, 0.556, 0, 40.556],
+        [0, 1, 0, 0, 0, 1, 0, 1],
+        [1, 0, 0, 0.111, 0, -0.556, 0, 4.444],
+        [0, 0, 1, -0.111, 0, -0.444, 0, 0.556],
+        [0, 0, 0, 0.111, 1, -0.556, 0, 0.444],
+        [1, 0, 0, 0, 0, 0, -1, 5],
+        [0, 0, 0, 0.111, 0, -0.556, 1, -0.556]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3", "C4", "temp5", "temp(2-5)"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "s4", "e5", "RHS"],
+      "basicVariables": ["x2", "x1", "s1", "e3", "e5"],
+      "optimizationType": "Maximize",
+      "status": "Constraint_Creation_Process",
+      "branch_constraint": "x1 >= 5",
+      "constraint_creation": {
+        "branching_variable": "x1",
+        "using_row": "row 2 (has basic x1)",
+        "temp5_constraint": "sets x1 >= 5 with excess e5",
+        "temp_calculation": "(row2 - temp5) = ([1,0,0,0.111,0,-0.556,0,4.444] - [1,0,0,0,0,0,-1,5])",
+        "temp_result": "[0,0,0,0.111,0,-0.556,1,-0.556]",
+        "creates_negative_rhs": true,
+        "note": "B branch uses excess variable without multiplication to create negative RHS for dual simplex"
+      }
+    },
+
+    "t-optimal-B1-A1-B1": {
+      "tableId": "t-optimal-B1-A1-B1",
+      "matrix": [
+        [0, 0, 0, 1, 0, 0, 1, 40],
+        [0, 1, 0, 0.2, 0, 0, 1.8, 0],
+        [1, 0, 0, 0, 0, 0, -1, 5],
+        [0, 0, 1, -0.2, 0, 0, -0.8, 1],
+        [0, 0, 0, 0, 1, 0, -1, 1],
+        [0, 0, 0, -0.2, 0, 1, -1.8, 1]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3", "C4", "C5"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "s4", "e5", "RHS"],
+      "basicVariables": ["x2", "x1", "s1", "e3", "s4"],
+      "optimizationType": "Maximize",
+      "status": "Optimal",
+      "solution": {"x1": 5, "x2": 0, "objective_value": 40},
+      "branch_constraint": "x1 >= 5",
+      "manipulation_performed": "Row 5 = (Row 2 - temp5)"
+    },
+    
+    "t-optimal-B1-Bi": {
+      "tableId": "t-optimal-B1-Bi",
+      "matrix": [
+        [0, 0, 0, 1, 1, 0, 41],
+        [0, 1, 0, 0.2, 1.8, 0, 1.8],
+        [1, 0, 0, 0, -1, 0, 4],
+        [0, 0, 1, -0.2, -0.8, 0, 0.2],
+        [0, 1, 0, 0, 0, -1, 2],
+        [0, 0, 0, 0.2, 1.8, 1, -0.2]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3", "temp4", "temp(1-4)"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "e4", "RHS"],
+      "basicVariables": ["x2", "x1", "s1", "e4"],
+      "optimizationType": "Maximize",
+      "status": "Constraint_Creation_Process",
+      "branch_constraint": "x2 >= 2",
+      "constraint_creation": {
+        "branching_variable": "x2",
+        "using_row": "row 1 (has basic x2)",
+        "temp4_constraint": "sets x2 >= 2 with excess e4",
+        "temp_calculation": "(row1 - temp4) = ([0,1,0,0.2,1.8,0,1.8] - [0,1,0,0,0,-1,2])",
+        "temp_result": "[0,0,0,0.2,1.8,1,-0.2]",
+        "creates_negative_rhs": true,
+        "note": "B branch uses excess variable without multiplication to create negative RHS for dual simplex"
+      }
+    },
+
+    "t-optimal-B1-B1": {
+      "tableId": "t-optimal-B1-B1",
+      "matrix": [
+        [0, 0, 0, 1, 1, 0, 41],
+        [0, 1, 0, 0.2, 1.8, 0, 1.8],
+        [1, 0, 0, 0, -1, 0, 4],
+        [0, 0, 1, -0.2, -0.8, 0, 0.2],
+        [0, 0, 0, 0.2, 1.8, 1, -0.2]
+      ],
+      "rowLabels": ["OBJ", "C1", "C2", "C3", "C4"],
+      "columnLabels": ["x1", "x2", "s1", "s2", "e3", "e4", "RHS"],
+      "basicVariables": ["x2", "x1", "s1", "e4"],
+      "optimizationType": "Maximize",
+      "status": "Infeasible",
+      "infeasibility_reason": "negative RHS in row 4, but no negative coeffs",
+      "branch_constraint": "x2 >= 2",
+      "manipulation_performed": "Row 4 = (Row 1 - temp4)"
+    }
+  },
+  
+  "branch_and_bound_tree": {
+    "root": {
+      "node_id": "root",
+      "table_id": "t-optimal",
+      "solution": {"x1": 3.75, "x2": 2.25, "objective_value": 41.25},
+      "is_integer": false,
+      "branching_variable": "x1",
+      "children": ["A", "B"]
+    },
+    
+    "A": {
+      "node_id": "A",
+      "parent": "root",
+      "table_id": "t-optimal-A1",
+      "constraint": "x1 <= 3",
+      "constraint_creation": {
+        "branching_variable": "x1",
+        "basic_row_index": 2,
+        "basic_row_values": [1, 0, -1.25, 0.25, 0, 3.75],
+        "temp_constraint": [1, 0, 0, 0, 1, 3],
+        "temp_manipulation": "(basic_row - constraint_row) * -1",
+        "temp_result": [0, 0, 1.25, -0.25, 1, -0.75],
+        "variable_type": "slack",
+        "creates_negative_rhs": true,
+        "note": "A branches use slack variables and multiply by -1"
+      },
+      "solution": {"x1": 3, "x2": 3, "objective_value": 39},
+      "is_integer": true,
+      "status": "feasible_integer_solution",
+      "children": []
+    },
+    
+    "B": {
+      "node_id": "B",
+      "parent": "root",
+      "table_id": "t-optimal-B1",
+      "constraint": "x1 >= 4",
+      "constraint_creation": {
+        "branching_variable": "x1",
+        "basic_row_index": 2,
+        "basic_row_values": [1, 0, -1.25, 0.25, 0, 3.75],
+        "temp_constraint": [1, 0, 0, 0, -1, 4],
+        "temp_manipulation": "(basic_row - constraint_row)",
+        "temp_result": [0, 0, -1.25, 0.25, 1, -0.25],
+        "variable_type": "excess",
+        "creates_negative_rhs": true,
+        "note": "B branches use excess variables without multiplication"
+      },
+      "solution": {"x1": 4, "x2": 1.8, "objective_value": 41},
+      "is_integer": false,
+      "branching_variable": "x2",
+      "children": ["B-A", "B-B"]
+    },
+    
+    "B-A": {
+      "node_id": "B-A",
+      "parent": "B",
+      "table_id": "t-optimal-B1-A1",
+      "constraint": "x2 <= 1",
+      "constraint_creation": {
+        "branching_variable": "x2",
+        "basic_row_index": 1,
+        "basic_row_values": [0, 1, 0, 0.2, 1.8, 0, 1.8],
+        "temp_constraint": [0, 1, 0, 0, 0, 1, 1],
+        "temp_manipulation": "(basic_row - constraint_row) * -1",
+        "temp_result": [0, 0, 0, -0.2, -1.8, 1, -0.8],
+        "variable_type": "slack",
+        "creates_negative_rhs": true,
+        "note": "A branches use slack variables and multiply by -1"
+      },
+      "solution": {"x1": 4.444, "x2": 1, "objective_value": 40.556},
+      "is_integer": false,
+      "branching_variable": "x1",
+      "children": ["B-A-A", "B-A-B"]
+    },
+    
+    "B-A-A": {
+      "node_id": "B-A-A",
+      "parent": "B-A",
+      "table_id": "t-optimal-B1-A1-A1",
+      "constraint": "x1 <= 4",
+      "constraint_creation": {
+        "branching_variable": "x1",
+        "basic_row_index": 2,
+        "basic_row_values": [1, 0, 0, 0.111, 0, -0.556, 0, 4.444],
+        "temp_constraint": [1, 0, 0, 0, 0, 0, 1, 4],
+        "temp_manipulation": "(basic_row - constraint_row) * -1",
+        "temp_result": [0, 0, 0, -0.111, 0, 0.556, 1, -0.444],
+        "variable_type": "slack",
+        "creates_negative_rhs": true,
+        "note": "A branches use slack variables and multiply by -1"
+      },
+      "solution": {"x1": 4, "x2": 1, "objective_value": 37},
+      "is_integer": true,
+      "status": "feasible_integer_solution",
+      "children": []
+    },
+    
+    "B-A-B": {
+      "node_id": "B-A-B",
+      "parent": "B-A",
+      "table_id": "t-optimal-B1-A1-B1",
+      "constraint": "x1 >= 5",
+      "constraint_creation": {
+        "branching_variable": "x1",
+        "basic_row_index": 2,
+        "basic_row_values": [1, 0, 0, 0.111, 0, -0.556, 0, 4.444],
+        "temp_constraint": [1, 0, 0, 0, 0, 0, -1, 5],
+        "temp_manipulation": "(basic_row - constraint_row)",
+        "temp_result": [0, 0, 0, 0.111, 0, -0.556, 1, -0.556],
+        "variable_type": "excess",
+        "creates_negative_rhs": true,
+        "note": "B branches use excess variables without multiplication"
+      },
+      "solution": {"x1": 5, "x2": 0, "objective_value": 40},
+      "is_integer": true,
+      "status": "feasible_integer_solution",
+      "children": []
+    },
+    
+    "B-B": {
+      "node_id": "B-B",
+      "parent": "B",
+      "table_id": "t-optimal-B1-Bi",
+      "constraint": "x2 >= 2",
+      "constraint_creation": {
+        "branching_variable": "x2",
+        "basic_row_index": 1,
+        "basic_row_values": [0, 1, 0, 0.2, 1.8, 0, 1.8],
+        "temp_constraint": [0, 1, 0, 0, 0, -1, 2],
+        "temp_manipulation": "(basic_row - constraint_row)",
+        "temp_result": [0, 0, 0, 0.2, 1.8, 1, -0.2],
+        "variable_type": "excess",
+        "creates_negative_rhs": true,
+        "note": "B branches use excess variables without multiplication"
+      },
+      "status": "infeasible",
+      "infeasibility_reason": "negative RHS in row 4, but no negative coeffs",
+      "children": []
+    }
+  },
+  
+  "algorithm_execution": {
+    "processing_order": [
+      "Processing: root (t-optimal)",
+      "Branching on x1 = 3.75",
+      "Processing: A (t-optimal-A1)",
+      "Integer solution found: x1=3, x2=3, obj=39",
+      "Processing: B (t-optimal-B1)", 
+      "Branching on x2 = 1.8",
+      "Processing: B-A (t-optimal-B1-A1)",
+      "Branching on x1 = 4.444",
+      "Processing: B-A-A (t-optimal-B1-A1-A1)",
+      "Integer solution found: x1=4, x2=1, obj=37",
+      "Processing: B-A-B (t-optimal-B1-A1-B1)",
+      "Integer solution found: x1=5, x2=0, obj=40",
+      "Processing: B-B (t-optimal-B1-Bi)",
+      "Fathomed: Infeasible subproblem"
+    ],
+    
+    "fathom_reasons": {
+      "B-B": "Infeasible subproblem"
+    },
+    
+    "integer_solutions": [
+      {
+        "node": "A",
+        "solution": {"x1": 3, "x2": 3, "objective_value": 39}
+      },
+      {
+        "node": "B-A-A", 
+        "solution": {"x1": 4, "x2": 1, "objective_value": 37}
+      },
+      {
+        "node": "B-A-B",
+        "solution": {"x1": 5, "x2": 0, "objective_value": 40}
+      }
+    ],
+    
+    "optimal_solution": {
+      "node": "B-A-B",
+      "solution": {"x1": 5, "x2": 0, "objective_value": 40}
+    }
+  },
+  
+  "constraint_creation_methodology": {
+    "description": "How branch and bound constraints are created to ensure negative RHS for dual simplex",
+    "A_branches": {
+      "constraint_type": "<=",
+      "variable_type": "slack",
+      "coefficient_in_constraint": 1,
+      "manipulation_formula": "(basic_row - constraint_row) * -1",
+      "purpose": "Creates negative RHS for dual simplex to restore feasibility",
+      "example": "For x1 ≤ 3: basic_row=[1,0,-1.25,0.25,0,3.75], constraint=[1,0,0,0,1,3], result=[0,0,1.25,-0.25,1,-0.75]"
+    },
+    "B_branches": {
+      "constraint_type": ">=",
+      "variable_type": "excess",
+      "coefficient_in_constraint": -1,
+      "manipulation_formula": "(basic_row - constraint_row)",
+      "purpose": "Creates negative RHS for dual simplex to restore feasibility",
+      "example": "For x1 ≥ 4: basic_row=[1,0,-1.25,0.25,0,3.75], constraint=[1,0,0,0,-1,4], result=[0,0,-1.25,0.25,1,-0.25]"
+    },
+    "critical_note": "Both methods create negative RHS values that violate primal feasibility, allowing dual simplex to find feasible solutions"
+  },
+
+  "metadata": {
+    "algorithm": "BranchAndBound",
+    "dual_simplex_used": true,
+    "total_nodes": 6,
+    "feasible_nodes": 5,
+    "infeasible_nodes": 1,
+    "integer_solutions_found": 3,
+    "optimal_objective_value": 40,
+    "created_time": "2025-08-29T00:00:00Z"
+  }
+}

@@ -1,0 +1,132 @@
+initial problem
+max +8 +5
++1 +1 <= 6
++9 +5 <= 45
+bin bin
+
+canonical
+T-i	x1	x2	s1	s2	rhs	θ
+z	-8	-5	0	0	0	
+1	1	1	1	0	6	6
+2	9	5	0	1	45	5
+
+primal 
+T-2	x1	x2	s1	s2	rhs	θ
+z	0	-  5/9 	0	  8/9 	40	
+1	0	  4/9 	1	-  1/9 	1	2  1/4 
+2	1	  5/9 	0	  1/9 	5	9      
+
+T-optimal	x1	x2	s1	s2	rhs
+z	0      	0      	1  1/4 	  3/4 	41  1/4 
+1	0      	1      	2  1/4 	-  1/4 	2  1/4 
+2	1      	0      	-1  1/4 	  1/4 	3  3/4 
+
+Sub-Problem A: x1 ≤ 3
+Sub-Problem B: x1 ≥ 4
+
+BRANCH A
+T-optimal-Ai	x1	x2	s1	s2	s3	rhs
+1	0      	1      	2  1/4 	-  1/4 	0	2  1/4
+2	1	0	-1  1/4 	  1/4 	0	3  3/4		**using row 2
+temp3	1	0	0	0	1	3       **sets the x1 <=3
+temp(2-3)*-1	0	0	1.25	-0.25	1	-0.75
+3	0	0	1.25	-0.25	1	-0.75
+
+T-optimal-A1	x1	x2	s1	s2	s3	rhs
+z	0      	0      	5      	0      	3      	39      
+1	0      	1      	1      	0      	-1      	3      
+2	1      	0      	0      	0      	1      	3      
+3	0      	0      	-5      	1      	-4      	3      
+Possible Solution=39 (feasible, all integers)
+
+BRANCH B
+T-optimal-Bi	x1	x2	s1	s2	e3	rhs
+z	0      	0      	1  1/4 	  3/4 	0      	41  1/4 
+1	0      	1      	2  1/4 	-  1/4 	0      	2  1/4 
+2	1      	0      	-1  1/4 	  1/4 	0      	3  3/4		**using row 2
+temp3	1	0	0	0	-1	4       **sets x1 >= 4
+temp(2-3)	0	0	-1  1/4 	  1/4 	1	-  1/4 
+3	0	0	-1  1/4 	  1/4 	1	-  1/4 
+
+T-optimal-B1	x1	x2	s1	s2	e3	rhs
+z	0      	0      	0      	1      	1      	41      
+1	0      	1      	0      	  1/5 	1  4/5 	1  4/5 
+2	1      	0      	0      	0      	-1      	4      
+3	0      	0      	1      	-  1/5 	-  4/5 	  1/5 
+
+
+Sub-Problem B-A: x2 ≤ 1
+Sub-Problem B-B: x2 ≥ 2
+
+BRANCH B-A
+T-optimal-B1-Ai	x1	x2	s1	s2	e3	s4	rhs
+z	0	0	0	1	1	0	41
+1	0	1	0	  1/5 	1  4/5 	0	1  4/5 		**using row 1, this row has the basic of x2 in it, which is our branch)
+2	1	0	0	0	-1	0	4
+3	0	0	1	-  1/5 	-  4/5 	0	  1/5 
+temp4	0	1	0	0	0	1	1
+temp(1-4)*-1	0      	0      	0      	-  1/5 	-1  4/5 	1      	-  4/5 
+4	0      	0      	0      	-  1/5 	-1  4/5 	1      	-  4/5 
+
+t-optimal-B1-A1	x1	x2	s1	s2	e3	s4	rhs
+z	0      	0      	0      	  8/9 	0      	  5/9 	40  5/9 
+1	0      	1      	0      	0      	0      	1      	1      
+2	1      	0      	0      	  1/9 	0      	-  5/9 	4  4/9 
+3	0      	0      	1      	-  1/9 	0      	-  4/9 	  5/9 
+4	0      	0      	0      	  1/9 	1      	-  5/9 	  4/9 
+
+Sub-Problem B-A-A: x1 ≤ 4							
+Sub-Problem B-A-B: x1 ≥ 5							
+
+BRANCH B-B
+t-optimal-B1-Bi	x1	x2	s1	s2	e3	e4	rhs
+z	0	0	0	1	1	0	41
+1	0	1	0	  1/5 	1  4/5 	0	1  4/5 		**using row 1, this row has the basic of x2 in it, which is our branch)
+2	1	0	0	0	-1	0	4
+3	0	0	1	-  1/5 	-  4/5 	0	  1/5 
+temp4	0	1	0	0	0	-1	2
+temp(1-4)	0      	0      	0      	  1/5 	1  4/5 	1      	-  1/5 
+4	0      	0      	0      	  1/5 	1  4/5 	1      	-  1/5 
+infeasible, negative RHS in row 4, but no neagative coeffs
+
+
+BRANCH B-A-A
+t-optimal-B1-A1-Ai	x1	x2	s1	s2	e3	s4	s5	rhs
+z	0      	0      	0      	  8/9 	0      	  5/9 	0      	40  5/9 
+1	0      	1      	0      	0      	0      	1      	0      	1      
+2	1      	0      	0      	  1/9 	0      	-  5/9 	0      	4  4/9 	**using row 2, this row has the basic of x1 in it, which is our branch)
+3	0      	0      	1      	-  1/9 	0      	-  4/9 	0      	  5/9 
+4	0      	0      	0      	  1/9 	1      	-  5/9 	0      	  4/9 
+temp5	1	0	0	0	0	0	1	4
+temp(2-5)*-1	0      	0      	0      	-  1/9 	0      	  5/9 	1      	-  4/9 
+5	0      	0      	0      	-  1/9 	0      	  5/9 	1      	-  4/9 
+
+t-optimal-B1-A1-A1	x1	x2	s1	s2	e3	s4	s5	rhs
+z	0      	0      	0      	0      	0      	5      	8      	37      
+1	0      	1      	0      	0      	0      	1      	0      	1      
+2	1      	0      	0      	0      	0      	0      	1      	4      
+3	0      	0      	1      	0      	0      	-1      	-1      	1      
+4	0      	0      	0      	0      	1      	0      	1      	0      
+5	0      	0      	0      	1      	0      	-5      	-9      	4      
+possible solution = 37
+
+
+BRANCH B-A-B
+t-optimal-B1-A1-Bi	x1	x2	s1	s2	e3	s4	e5	rhs
+z	0      	0      	0      	  8/9 	0      	  5/9 	0      	40  5/9 
+1	0      	1      	0      	0      	0      	1      	0      	1      
+2	1      	0      	0      	  1/9 	0      	-  5/9 	0      	4  4/9 		**using row 2, this row has the basic of x1 in it, which is our branch)
+3	0      	0      	1      	-  1/9 	0      	-  4/9 	0      	  5/9 
+4	0      	0      	0      	  1/9 	1      	-  5/9 	0      	  4/9 
+temp5	1	0	0	0	0	0	-1	5
+temp(2-5)	0      	0      	0      	  1/9 	0      	-  5/9 	1      	-  5/9 
+5	0      	0      	0      	  1/9 	0      	-  5/9 	1      	-  5/9 
+
+t-optimal-B1-A1-B1	x1	x2	s1	s2	e3	s4	e5	rhs
+z	0      	0      	0      	1      	0      	0      	1      	40      
+1	0      	1      	0      	  1/5 	0      	0      	1  4/5 	0      
+2	1      	0      	0      	0      	0      	0      	-1      	5      
+3	0      	0      	1      	-  1/5 	0      	0      	-  4/5 	1      
+4	0      	0      	0      	0      	1      	0      	-1      	1      
+5	0      	0      	0      	-  1/5 	0      	1      	-1  4/5 	1      
+possible solution = 40, best solution
