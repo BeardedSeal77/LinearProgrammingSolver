@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using LinearProgrammingSolver.Tables;
 
-namespace LinearProgrammingSolver.LPAlgorithms
+namespace LinearProgrammingSolver.Algorithms.LPAlgorithms
 {
     public class PrimalSimplexAlgorithm
     {

@@ -1,7 +1,7 @@
 using System;
 using LinearProgrammingSolver.Tables;
 
-namespace LinearProgrammingSolver.NLPAlgorithms
+namespace LinearProgrammingSolver.Algorithms.NLPAlgorithms
 {
     /// <summary>
     /// Non-Linear Programming optimization algorithm using analytical methods.

@@ -11,9 +11,8 @@
 
   <ItemGroup>
     <Folder Include="public\" />
-    <Compile Remove="LPAlgorithms/RevisedSimplexAlgorithm.cs" />
-    <Compile Remove="IPAlgorithms/BranchAndBoundKnapsackAlgorithm.cs" />
-    <Compile Remove="IPAlgorithms/CuttingPlaneAlgorithm.cs" />
+    <Compile Remove="Algorithms/LPAlgorithms/RevisedSimplexAlgorithm.cs" />
+    <Compile Remove="Algorithms/IPAlgorithms/BranchAndBoundKnapsackAlgorithm.cs" />
     <Compile Remove="Utils/FileWriter.cs" />
     <Compile Remove="Utils/PivotingOperations.cs" />
     <Compile Remove="Tables/BranchAndBoundTable.cs" />
