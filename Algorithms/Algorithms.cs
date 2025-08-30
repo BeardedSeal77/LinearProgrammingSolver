@@ -5,6 +5,7 @@ using LinearProgrammingSolver.Tables;
 using LinearProgrammingSolver.Algorithms.LPAlgorithms;
 using LinearProgrammingSolver.Algorithms.IPAlgorithms;
 using LinearProgrammingSolver.Algorithms.NLPAlgorithms;
+using LinearProgrammingSolver.Utils;
 
 namespace LinearProgrammingSolver.Algorithms
 {
@@ -93,7 +94,8 @@ namespace LinearProgrammingSolver.Algorithms
                                 }
                                 else
                                 {
-                                    Console.WriteLine("Cutting Plane Algorithm - Coming Soon!");
+                                    currentOptimalTable = ExecuteCuttingPlane();
+                                    backToMain = true;
                                 }
                                 break;
                             case AlgorithmOption.NonLinearProgramming:
@@ -164,16 +166,17 @@ namespace LinearProgrammingSolver.Algorithms
                 return null;
             }
             
+            // Check prerequisites using generic system
+            if (!EnsurePrerequisites(new[] { "t-i" }, out string errorMessage))
+            {
+                Console.WriteLine($"Error: {errorMessage}");
+                return null;
+            }
+            
             try
             {
                 var simplexSolver = new PrimalSimplexAlgorithm();
-                var initialTable = TableCache.GetTable("t-i");
-                
-                if (initialTable == null)
-                {
-                    Console.WriteLine("Error: Canonical table (t-i) not found in TableCache.");
-                    return null;
-                }
+                var initialTable = TableCache.GetTable("t-i"); // Guaranteed to exist by prerequisite check
                 
                 Console.WriteLine("Starting Primal Simplex Algorithm...");
                 Console.WriteLine();
@@ -236,42 +239,20 @@ namespace LinearProgrammingSolver.Algorithms
                 return null;
             }
             
+            // Check prerequisites using generic system
+            if (!EnsurePrerequisites(new[] { "t-i", "t-optimal" }, out string errorMessage))
+            {
+                Console.WriteLine($"Error: {errorMessage}");
+                return null;
+            }
+            
             try
             {
-                // Check if canonical table exists
+                // Get tables (guaranteed to exist by prerequisite check)
                 var canonical = TableCache.GetTable("t-i");
-                if (canonical == null)
-                {
-                    Console.WriteLine("Error: No canonical table found. Please load a file first.");
-                    return null;
-                }
-                
-                // Check if optimal table exists
                 var optimalTable = TableCache.GetTable("t-optimal");
-                
-                if (optimalTable == null)
-                {
-                    Console.WriteLine("No optimal LP solution found in cache. Running Primal Simplex first...");
-                    Console.WriteLine();
-                    
-                    // Automatically run Primal Simplex
-                    var primalSimplex = new PrimalSimplexAlgorithm();
-                    optimalTable = primalSimplex.SolveLP(canonical);
-                    
-                    if (optimalTable == null || !optimalTable.IsOptimal())
-                    {
-                        Console.WriteLine($"Error: LP relaxation could not be solved optimally. Status: {optimalTable?.Status ?? "null"}");
-                        return null;
-                    }
-                    
-                    Console.WriteLine($"LP relaxation solved with objective value: {optimalTable.GetObjectiveValue():F3}");
-                    Console.WriteLine();
-                }
-                else
-                {
-                    Console.WriteLine($"Found existing optimal LP solution with objective value: {optimalTable.GetObjectiveValue():F3}");
-                    Console.WriteLine();
-                }
+                Console.WriteLine($"Using optimal LP solution with objective value: {optimalTable.GetObjectiveValue():F3}");
+                Console.WriteLine();
                 
                 // Start Branch & Bound
                 Console.WriteLine("Starting Branch & Bound Integer Programming...");
@@ -528,6 +509,236 @@ namespace LinearProgrammingSolver.Algorithms
             catch (Exception ex)
             {
                 Console.WriteLine($"Error exporting Branch & Bound results: {ex.Message}");
+            }
+        }
+
+        // Executes Cutting Plane algorithm with automatic pipeline execution
+        private Table ExecuteCuttingPlane()
+        {
+            Console.Clear();
+            Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║                      EXECUTING CUTTING PLANE ALGORITHM                       ║");
+            Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
+            Console.WriteLine();
+            
+            // Validate problem type
+            if (currentProblemType != ProblemType.LinearProgramming)
+            {
+                Console.WriteLine("Error: Cutting Plane algorithm requires a Linear Programming problem.");
+                Console.WriteLine("The currently loaded file contains a Non-Linear Programming problem.");
+                Console.WriteLine("Please load an LP/IP file (format: max/min ...) or select the NLP algorithm instead.");
+                return null;
+            }
+            
+            // Check prerequisites using generic system
+            if (!EnsurePrerequisites(new[] { "t-optimal" }, out string errorMessage))
+            {
+                Console.WriteLine($"Error: {errorMessage}");
+                return null;
+            }
+            
+            try
+            {
+                // Get optimal table (guaranteed to exist by prerequisite check)
+                var optimalTable = TableCache.GetTable("t-optimal");
+                Console.WriteLine($"Using optimal LP solution with objective value: {optimalTable.GetObjectiveValue():F3}");
+                Console.WriteLine();
+                
+                // Start Cutting Plane Algorithm
+                Console.WriteLine("Starting Cutting Plane Integer Programming...");
+                Console.WriteLine();
+                
+                var cuttingPlane = new CuttingPlaneAlgorithm();
+                var integerSolution = cuttingPlane.SolveIP(optimalTable);
+                
+                // Display results
+                Console.WriteLine("=== CUTTING PLANE RESULTS ===");
+                if (integerSolution != null)
+                {
+                    Console.WriteLine($"Final Status: {integerSolution.Status}");
+                    Console.WriteLine($"Final Objective Value: {integerSolution.GetObjectiveValue():F6}");
+                    Console.WriteLine();
+                    
+                    Console.WriteLine("Final Solution Variables:");
+                    for (int i = 0; i < integerSolution.BasicVariables.Count; i++)
+                    {
+                        var varName = integerSolution.BasicVariables[i];
+                        var value = integerSolution.GetElement(i + 1, integerSolution.GetColumnCount() - 1);
+                        Console.WriteLine($"  {varName} = {value:F6}");
+                    }
+                    Console.WriteLine();
+                    
+                    // Display cutting planes summary
+                    cuttingPlane.DisplayCuttingPlanes();
+                }
+                else
+                {
+                    Console.WriteLine("Cutting Plane algorithm failed to find a solution");
+                }
+                
+                // Export results
+                ExportCuttingPlaneResults(cuttingPlane);
+                
+                Console.WriteLine();
+                Console.WriteLine("Cutting Plane results exported to data/output.txt");
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                Console.Clear();
+                
+                return integerSolution;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during Cutting Plane execution: {ex.Message}");
+                Console.WriteLine("Please check your input file and try again.");
+                Console.WriteLine();
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                Console.Clear();
+                return null;
+            }
+        }
+        
+        // Export Cutting Plane algorithm results to file
+        private void ExportCuttingPlaneResults(CuttingPlaneAlgorithm cuttingPlane)
+        {
+            try
+            {
+                string outputPath = System.IO.Path.Combine("data", "output.txt");
+                using (var writer = new System.IO.StreamWriter(outputPath, true)) // Append mode
+                {
+                    writer.WriteLine();
+                    writer.WriteLine("=== CUTTING PLANE ALGORITHM RESULTS ===");
+                    writer.WriteLine($"Executed at: {DateTime.Now}");
+                    writer.WriteLine();
+                    
+                    // Get current optimal table (the final result)
+                    var finalSolution = GetCurrentOptimalTable();
+                    if (finalSolution != null)
+                    {
+                        writer.WriteLine($"Table ID: {finalSolution.TableId}");
+                        writer.WriteLine($"Status: {finalSolution.Status}");
+                        writer.WriteLine($"Objective Value: {finalSolution.GetObjectiveValue():F6}");
+                        writer.WriteLine("Basic variables and values:");
+                        for (int i = 0; i < finalSolution.BasicVariables.Count; i++)
+                        {
+                            var varName = finalSolution.BasicVariables[i];
+                            var value = finalSolution.GetElement(i + 1, finalSolution.GetColumnCount() - 1);
+                            writer.WriteLine($"  {varName} = {value:F6}");
+                        }
+                        writer.WriteLine();
+                        writer.WriteLine("Final Table:");
+                        writer.WriteLine(finalSolution.ToString());
+                    }
+                    else
+                    {
+                        writer.WriteLine("No solution found!");
+                    }
+                    
+                    writer.WriteLine();
+                    writer.WriteLine("=== ALGORITHM SUMMARY ===");
+                    writer.WriteLine("Method: Iterative Cutting Plane Algorithm");
+                    writer.WriteLine("Approach: Rounding-based cuts to eliminate fractional solutions");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting Cutting Plane results: {ex.Message}");
+            }
+        }
+
+        // Generic prerequisite validation and automatic pipeline execution
+        private bool EnsurePrerequisites(string[] requiredTables, out string errorMessage)
+        {
+            errorMessage = null;
+            
+            foreach (string tableId in requiredTables)
+            {
+                var table = TableCache.GetTable(tableId);
+                if (table == null)
+                {
+                    // Attempt to generate missing prerequisite
+                    if (TryGenerateMissingTable(tableId))
+                    {
+                        Console.WriteLine($"Generated missing prerequisite: {tableId}");
+                        continue;
+                    }
+                    else
+                    {
+                        errorMessage = $"Missing prerequisite table '{tableId}' and could not generate it automatically.";
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        
+        // Attempt to generate missing tables through appropriate pipeline steps
+        private bool TryGenerateMissingTable(string tableId)
+        {
+            try
+            {
+                switch (tableId)
+                {
+                    case "t-i": // Canonical table
+                        var rawTable = TableCache.GetTable("t-raw");
+                        if (rawTable == null)
+                        {
+                            Console.WriteLine("Error: No raw input table found. Please load a file first.");
+                            return false;
+                        }
+                        
+                        Console.WriteLine("Generating canonical form (t-i) from raw input...");
+                        var converter = new CanonicalFormConverter();
+                        var canonicalTable = converter.ConvertToCanonicalForm(rawTable);
+                        
+                        if (canonicalTable == null)
+                        {
+                            Console.WriteLine("Error: Failed to convert to canonical form.");
+                            return false;
+                        }
+                        
+                        canonicalTable.TableId = "t-i";
+                        canonicalTable.Status = "Canonical";
+                        TableCache.StoreTable(canonicalTable);
+                        return true;
+                        
+                    case "t-optimal": // Optimal table
+                        var canonical = TableCache.GetTable("t-i");
+                        if (canonical == null)
+                        {
+                            // Recursively ensure canonical exists first
+                            if (!TryGenerateMissingTable("t-i"))
+                                return false;
+                            canonical = TableCache.GetTable("t-i");
+                        }
+                        
+                        Console.WriteLine("Generating optimal solution (t-optimal) using Primal Simplex...");
+                        var primalSimplex = new PrimalSimplexAlgorithm();
+                        var optimalTable = primalSimplex.SolveLP(canonical);
+                        
+                        if (optimalTable == null || !optimalTable.IsOptimal())
+                        {
+                            Console.WriteLine($"Error: Could not solve LP optimally. Status: {optimalTable?.Status ?? "null"}");
+                            return false;
+                        }
+                        
+                        optimalTable.TableId = "t-optimal";
+                        optimalTable.Status = "Optimal";
+                        TableCache.StoreTable(optimalTable);
+                        Console.WriteLine($"LP solved with objective value: {optimalTable.GetObjectiveValue():F3}");
+                        return true;
+                        
+                    default:
+                        Console.WriteLine($"Unknown table ID for automatic generation: {tableId}");
+                        return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error generating {tableId}: {ex.Message}");
+                return false;
             }
         }
 

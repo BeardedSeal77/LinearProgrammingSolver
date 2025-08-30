@@ -13,7 +13,6 @@
     <Folder Include="public\" />
     <Compile Remove="Algorithms/LPAlgorithms/RevisedSimplexAlgorithm.cs" />
     <Compile Remove="Algorithms/IPAlgorithms/BranchAndBoundKnapsackAlgorithm.cs" />
-    <Compile Remove="Algorithms/IPAlgorithms/CuttingPlaneAlgorithm.cs" />
     <Compile Remove="Utils/FileWriter.cs" />
     <Compile Remove="Utils/PivotingOperations.cs" />
     <Compile Remove="Tables/BranchAndBoundTable.cs" />
