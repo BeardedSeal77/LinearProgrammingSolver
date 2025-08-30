@@ -1,6 +1,6 @@
 using LinearProgrammingSolver.Tables;
 
-namespace LinearProgrammingSolver.Algorithms.LPAlgorithms
+namespace LinearProgrammingSolver.Algorithms.Implementations.LP
 {
     public class RevisedSimplexAlgorithm
     {

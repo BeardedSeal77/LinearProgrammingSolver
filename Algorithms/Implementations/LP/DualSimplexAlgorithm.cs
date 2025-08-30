@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using LinearProgrammingSolver.Tables;
 
-namespace LinearProgrammingSolver.Algorithms.LPAlgorithms
+namespace LinearProgrammingSolver.Algorithms.Implementations.LP
 {
     public class DualSimplexAlgorithm
     {

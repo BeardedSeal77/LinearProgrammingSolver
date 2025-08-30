@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LinearProgrammingSolver.Tables;
 using LinearProgrammingSolver.Utils;
-using LinearProgrammingSolver.Algorithms.LPAlgorithms;
+using LinearProgrammingSolver.Algorithms.Implementations.LP;
 
 namespace LinearProgrammingSolver.Analysis
 {

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using LinearProgrammingSolver.Tables;
-using LinearProgrammingSolver.Algorithms.LPAlgorithms;
+using LinearProgrammingSolver.Algorithms.Implementations.LP;
 using LinearProgrammingSolver.Utils;
 
-namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
+namespace LinearProgrammingSolver.Algorithms.Implementations.IP
 {
     public class CuttingPlaneAlgorithm
     {
@@ -25,32 +25,23 @@ namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
 
         public Table SolveIP(Table lpOptimalTable)
         {
-            Console.WriteLine("═══════════════════════════════════════════════════════════════");
-            Console.WriteLine("                    CUTTING PLANE ALGORITHM                   ");
-            Console.WriteLine("═══════════════════════════════════════════════════════════════");
-            Console.WriteLine();
-            
             if (lpOptimalTable?.Status != "Optimal")
             {
-                Console.WriteLine("Error: Invalid input - need an optimal LP solution table");
+                Console.WriteLine("Error: Need optimal LP solution");
                 return null;
             }
 
-            // Step 1: Check if LP solution is already integer-feasible
+            // Check if already integer-feasible
             if (IsIntegerFeasible(lpOptimalTable))
             {
-                Console.WriteLine("LP solution is already integer-feasible!");
-                Console.WriteLine("No cutting planes needed - returning optimal solution.");
-                
+                Console.WriteLine("Solution is already integer");
                 var integerTable = new Table($"{lpOptimalTable.TableId}-integer", lpOptimalTable);
                 integerTable.Status = "Optimal_Integer";
                 TableCache.StoreTable(integerTable);
                 return integerTable;
             }
 
-            Console.WriteLine("LP solution contains fractional integer variables");
-            Console.WriteLine("Applying cutting plane methodology...");
-            Console.WriteLine();
+            Console.WriteLine("Applying cuts...");
 
             Table workingTable = new Table("cutting-start", lpOptimalTable);
             int cutIteration = 0;
@@ -61,49 +52,46 @@ namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
             while (cutIteration < MAX_CUTS && !IsIntegerFeasible(workingTable))
             {
                 cutIteration++;
-                Console.WriteLine($"--- Cutting Iteration #{cutIteration} ---");
                 
-                // Find Gomory cutting row (RHS fraction closest to 0.5)
+                // Find cutting row
                 var (fractionalVar, fractionalRow, fractionalValue) = FindGomoryCuttingRow(workingTable);
                 
                 if (fractionalVar == null)
                 {
-                    Console.WriteLine("No fractional integer variables found - terminating");
+                    Console.WriteLine("No fractional variables found");
                     break;
                 }
                 
-                Console.WriteLine($"Target variable: {fractionalVar} = {fractionalValue:F4} (row {fractionalRow})");
-                
-                // Generate and apply Gomory cutting constraint
+                // Generate cut
                 Table cutTable = GenerateGomoryCut(workingTable, fractionalRow, cutIteration);
                 
                 if (cutTable == null)
                 {
-                    Console.WriteLine("Failed to generate valid cutting constraint");
+                    Console.WriteLine("Failed to generate cut");
                     break;
                 }
                 
-                // Resolve the modified LP problem using dual simplex
-                Console.WriteLine("Solving with dual simplex...");
-                
+                // Solve with dual simplex
                 Table newSolution = _dualSimplex.SolveLP(cutTable);
                 
                 if (newSolution?.Status != "Optimal")
                 {
-                    Console.WriteLine($"Status: {newSolution?.Status ?? "Failed"}");
-                    if (newSolution?.Status == "Infeasible")
-                    {
-                        Console.WriteLine("Problem became infeasible after adding cut.");
-                    }
+                    Console.WriteLine($"Dual simplex failed: {newSolution?.Status ?? "Error"}");
                     break;
                 }
                 
                 workingTable = newSolution;
-                workingTable.TableId = $"cut-iteration-{cutIteration}";
+                workingTable.TableId = $"cut-{cutIteration}";
                 TableCache.StoreTable(workingTable);
                 
                 double newObjValue = workingTable.GetElement(0, workingTable.GetColumnCount() - 1);
-                Console.WriteLine($"Cut {cutIteration} applied. New objective: {newObjValue:F4}");
+                Console.WriteLine($"Cut {cutIteration}: obj = {newObjValue:F3}");
+                
+                // Check if integer feasible
+                if (IsIntegerFeasible(workingTable))
+                {
+                    break;
+                }
                 
                 // Check for improvement
                 if (Math.Abs(newObjValue - previousObjValue) < TOLERANCE)
@@ -111,7 +99,7 @@ namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
                     noImprovementCount++;
                     if (noImprovementCount >= 3)
                     {
-                        Console.WriteLine("No significant improvement in 3 iterations. Terminating cutting phase.");
+                        Console.WriteLine("No improvement - stopping");
                         break;
                     }
                 }
@@ -121,99 +109,49 @@ namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
                 }
                 
                 previousObjValue = newObjValue;
-                Console.WriteLine();
             }
             
-            // Step 3: Final result
-            Console.WriteLine("Cutting phase complete.");
-            Console.WriteLine();
+            // Create final result table (avoid modifying the working table)
+            var finalTable = new Table("cp-final", workingTable);
             
-            // Set final status based on solution quality
-            if (IsIntegerFeasible(workingTable))
+            if (IsIntegerFeasible(finalTable))
             {
-                workingTable.Status = "Optimal_Integer";
-                Console.WriteLine("Integer-feasible solution found via cutting planes!");
+                finalTable.Status = "Optimal_Integer";
             }
             else
             {
-                workingTable.Status = "Partial_Solution";
-                Console.WriteLine("Maximum cuts reached. Solution may not be integer-feasible.");
+                finalTable.Status = "Partial_Solution";
+                Console.WriteLine("Max cuts reached");
             }
             
-            workingTable.TableId = "cutting-plane-final";
-            TableCache.StoreTable(workingTable);
-            return workingTable;
+            TableCache.StoreTable(finalTable);
+            return finalTable;
         }
 
         // Generate proper Gomory cutting plane from fractional row
         private Table GenerateGomoryCut(Table currentTable, int fractionalRow, int cutNumber)
         {
-            Console.WriteLine($"Generating Gomory cut from row {fractionalRow}");
-            
-            int numColumns = currentTable.GetColumnCount() - 1; // Exclude RHS
+            int numColumns = currentTable.GetColumnCount() - 1;
             double[] cutCoefficients = new double[numColumns];
             
-            // Get RHS value and its fractional part
+            // Get RHS fractional part
             double rhsValue = currentTable.GetElement(fractionalRow, currentTable.GetColumnCount() - 1);
             double rhsFraction = GetFractionalPart(rhsValue);
             
-            // Generate proper Gomory cut coefficients
-            // From row 2: x1 - 1.25*s1 + 0.25*s2 = 3.75
-            // Expected cut: -0.75*s1 - 0.25*s2 <= -0.75
-            
-            Console.WriteLine("Original row coefficients:");
-            for (int j = 0; j < numColumns; j++)
-            {
-                double coefficient = currentTable.GetElement(fractionalRow, j);
-                string colLabel = j < currentTable.ColumnLabels.Count ? currentTable.ColumnLabels[j] : $"col{j}";
-                Console.WriteLine($"  {colLabel}: {coefficient:F3}");
-            }
-            Console.WriteLine($"  RHS: {rhsValue:F3}");
-            
-            // For the expected output, we need specific coefficients for this problem
-            // This suggests the cut generation formula needs adjustment
+            // Generate cut coefficients
             for (int j = 0; j < numColumns; j++)
             {
                 double coefficient = currentTable.GetElement(fractionalRow, j);
                 double fractionalPart = GetFractionalPart(coefficient);
-                
-                // Based on your expected output, for -1.25 we want -0.75, for 0.25 we want -0.25
-                // This suggests: coeff = -(1 - fractionalPart) for negative, -fractionalPart for positive
-                if (coefficient < 0)
-                {
-                    cutCoefficients[j] = -(1.0 - fractionalPart);
-                }
-                else
-                {
-                    cutCoefficients[j] = -fractionalPart;
-                }
+                cutCoefficients[j] = -fractionalPart;
             }
             
             rhsFraction = -rhsFraction;
             
-            Console.WriteLine("Gomory cut constraint:");
-            bool hasNonZero = false;
-            for (int j = 0; j < numColumns; j++)
-            {
-                if (Math.Abs(cutCoefficients[j]) > TOLERANCE)
-                {
-                    string colLabel = j < currentTable.ColumnLabels.Count ? currentTable.ColumnLabels[j] : $"col{j}";
-                    string sign = hasNonZero ? (cutCoefficients[j] >= 0 ? " + " : " - ") : "";
-                    double absCoeff = Math.Abs(cutCoefficients[j]);
-                    if (hasNonZero && cutCoefficients[j] < 0) Console.Write(" - ");
-                    else if (hasNonZero) Console.Write(" + ");
-                    else if (cutCoefficients[j] < 0) Console.Write("-");
-                    Console.Write($"{absCoeff:F3}{colLabel}");
-                    hasNonZero = true;
-                }
-            }
-            Console.WriteLine($" <= {rhsFraction:F3}");
-            
             // Store cut description
-            _cuttingPlanes.Add($"Cut #{cutNumber}: Gomory cut from row {fractionalRow}");
+            _cuttingPlanes.Add($"Cut #{cutNumber}");
             
-            var result = ExpandTableWithCut(currentTable, cutCoefficients, rhsFraction, $"gomory{cutNumber}");
-            return result;
+            return ExpandTableWithCut(currentTable, cutCoefficients, rhsFraction, $"gomory{cutNumber}");
         }
         
         // Get fractional part for Gomory cuts
@@ -278,7 +216,7 @@ namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
             return true; // All integer variables have integer values
         }
         
-        // Find the row for Gomory cut - RHS fraction closest to 0.5, then smallest subscript
+        // Find the row for Gomory cut - RHS fraction closest to 0.5
         private (string variable, int row, double value) FindGomoryCuttingRow(Table table)
         {
             string selectedVar = null;
@@ -286,22 +224,18 @@ namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
             double selectedValue = 0;
             double closestTo05 = double.MaxValue;
             
-            Console.WriteLine("Finding cutting row (fraction closest to 0.5):");
-            
             for (int i = 0; i < table.BasicVariables.Count; i++)
             {
                 string basicVar = table.BasicVariables[i];
                 double rhsValue = table.GetElement(i + 1, table.GetColumnCount() - 1);
                 
-                // Only consider decision variables (x1, x2, etc.) for integer constraints
+                // Only consider decision variables (x1, x2, etc.)
                 if (IsDecisionVariable(basicVar))
                 {
                     double fractionalPart = rhsValue - Math.Floor(rhsValue);
                     double distanceFrom05 = Math.Abs(fractionalPart - 0.5);
                     
-                    Console.WriteLine($"  {basicVar} = {rhsValue:F3}, fraction = {fractionalPart:F3}");
-                    
-                    // Select row with fraction closest to 0.5 (with smallest subscript as tiebreaker)
+                    // Select row with fraction closest to 0.5
                     if (fractionalPart > TOLERANCE && 
                         (distanceFrom05 < closestTo05 || 
                          (Math.Abs(distanceFrom05 - closestTo05) < TOLERANCE && 
@@ -309,15 +243,10 @@ namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
                     {
                         closestTo05 = distanceFrom05;
                         selectedVar = basicVar;
-                        selectedRow = i + 1; // +1 for objective row offset
+                        selectedRow = i + 1;
                         selectedValue = rhsValue;
                     }
                 }
-            }
-            
-            if (selectedVar != null)
-            {
-                Console.WriteLine($"Selected: {selectedVar} = {selectedValue:F3}");
             }
             
             return (selectedVar, selectedRow, selectedValue);
@@ -429,27 +358,10 @@ namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
 
         public void DisplayCuttingPlanes()
         {
-            Console.WriteLine("═══════════════════════════════════════════════════════════════");
-            Console.WriteLine("                    CUTTING PLANES SUMMARY                    ");
-            Console.WriteLine("═══════════════════════════════════════════════════════════════");
-            
-            if (_cuttingPlanes.Count == 0)
+            if (_cuttingPlanes.Count > 0)
             {
-                Console.WriteLine("No cutting planes were generated during the solution process.");
-                Console.WriteLine();
-                return;
+                Console.WriteLine($"Cuts applied: {_cuttingPlanes.Count}");
             }
-            
-            Console.WriteLine($"Total cutting planes applied: {_cuttingPlanes.Count}");
-            Console.WriteLine();
-            
-            foreach (string cut in _cuttingPlanes)
-            {
-                Console.WriteLine($"  {cut}");
-            }
-            Console.WriteLine();
-            Console.WriteLine("Note: These are heuristic cuts designed to tighten the LP relaxation.");
-            Console.WriteLine("Algorithm uses iterative cutting plane methodology.");
         }
     }
 }

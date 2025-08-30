@@ -11,13 +11,14 @@
 
   <ItemGroup>
     <Folder Include="public\" />
-    <Compile Remove="Algorithms/LPAlgorithms/RevisedSimplexAlgorithm.cs" />
-    <Compile Remove="Algorithms/IPAlgorithms/BranchAndBoundKnapsackAlgorithm.cs" />
     <Compile Remove="Utils/FileWriter.cs" />
     <Compile Remove="Utils/PivotingOperations.cs" />
     <Compile Remove="Tables/BranchAndBoundTable.cs" />
     <Compile Remove="Tables/_old/**/*.cs" />
     <Compile Remove="_old/**/*.cs" />
+    <Compile Remove="Algorithms/_old/**/*.cs" />
+    <Compile Remove="Algorithms/Implementations/LP/RevisedSimplexAlgorithm.cs" />
+    <Compile Remove="Algorithms/Implementations/IP/BranchAndBoundKnapsackAlgorithm.cs" />
   </ItemGroup>
 
 </Project>

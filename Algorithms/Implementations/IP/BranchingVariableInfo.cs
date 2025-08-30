@@ -1,6 +1,6 @@
 using System;
 
-namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
+namespace LinearProgrammingSolver.Algorithms.Implementations.IP
 {
     // Stores complete information about the variable chosen for branching
     public class BranchingVariableInfo

@@ -1,6 +1,6 @@
 using System;
 using LinearProgrammingSolver.Tables;
-using LinearProgrammingSolver.Algorithms.LPAlgorithms;
+using LinearProgrammingSolver.Algorithms.Implementations.LP;
 using LinearProgrammingSolver.Utils;
 
 namespace LinearProgrammingSolver.Analysis

@@ -1,7 +1,7 @@
 ﻿using System;
 using LinearProgrammingSolver.Utils;
 using LinearProgrammingSolver.Tables;
-using LinearProgrammingSolver.Algorithms;
+using LinearProgrammingSolver.Algorithms.Core;
 using LinearProgrammingSolver.Analysis;
 
 namespace LinearProgrammingSolver

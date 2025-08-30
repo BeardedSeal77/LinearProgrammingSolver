@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LinearProgrammingSolver.Tables;
-using LinearProgrammingSolver.Algorithms.LPAlgorithms;
+using LinearProgrammingSolver.Algorithms.Implementations.LP;
 
-namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
+namespace LinearProgrammingSolver.Algorithms.Implementations.IP
 {
     public class BranchAndBoundAlgorithm
     {

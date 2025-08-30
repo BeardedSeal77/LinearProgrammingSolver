@@ -1,6 +1,6 @@
 using LinearProgrammingSolver.Tables;
 
-namespace LinearProgrammingSolver.Algorithms.IPAlgorithms
+namespace LinearProgrammingSolver.Algorithms.Implementations.IP
 {
     public class BranchAndBoundKnapsackAlgorithm
     {
