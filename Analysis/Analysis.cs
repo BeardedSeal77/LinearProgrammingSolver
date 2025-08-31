@@ -9,8 +9,7 @@ namespace LinearProgrammingSolver.Analysis
     {
         DualityAnalysis = 1,
         SensitivityAnalysis = 2,
-        ShadowPrices = 3,
-        BackToMain = 4
+        BackToMain = 3
     }
 
     public class Analysis
@@ -25,7 +24,7 @@ namespace LinearProgrammingSolver.Analysis
                 
                 if (int.TryParse(Console.ReadLine(), out int choice))
                 {
-                    if (choice >= 1 && choice <= 4)
+                    if (choice >= 1 && choice <= 3)
                     {
                         var selectedOption = (AnalysisOption)choice;
                         
@@ -36,9 +35,6 @@ namespace LinearProgrammingSolver.Analysis
                                 break;
                             case AnalysisOption.SensitivityAnalysis:
                                 RunSensitivityAnalysis();
-                                break;
-                            case AnalysisOption.ShadowPrices:
-                                RunShadowPriceAnalysis();
                                 break;
                             case AnalysisOption.BackToMain:
                                 backToMain = true;
@@ -71,13 +67,12 @@ namespace LinearProgrammingSolver.Analysis
             Console.WriteLine("╠══════════════════════════════════════════════════════════════════════════════╣");
             Console.WriteLine("║                                                                              ║");
             Console.WriteLine("║  1. Duality Analysis          - Construct and solve dual problem             ║");
-            Console.WriteLine("║  2. Sensitivity Analysis       - Variable and constraint sensitivity         ║");
-            Console.WriteLine("║  3. Shadow Prices              - Extract shadow prices from optimal tableau   ║");
-            Console.WriteLine("║  4. Back to Main Menu          - Return to main menu                         ║");
+            Console.WriteLine("║  2. Sensitivity Analysis       - Shadow prices, ranges, reduced costs       ║");
+            Console.WriteLine("║  3. Back to Main Menu          - Return to main menu                         ║");
             Console.WriteLine("║                                                                              ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
-            Console.Write("Select an analysis option (1-4): ");
+            Console.Write("Select an analysis option (1-3): ");
         }
 
         private static void RunDualityAnalysis()
@@ -89,8 +84,19 @@ namespace LinearProgrammingSolver.Analysis
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
             
+            // Clear output file before analysis
+            try
+            {
+                var fileWriter = new FileWriter();
+                fileWriter.ClearOutputFile("data/output.txt");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Could not clear output file: {ex.Message}");
+            }
+            
             // Ensure we have all required tables
-            var requiredTables = EnsureRequiredTables();
+            var requiredTables = EnsureRequiredTables("Duality");
             if (!requiredTables.success)
             {
                 Console.WriteLine($"Error: {requiredTables.message}");
@@ -109,8 +115,19 @@ namespace LinearProgrammingSolver.Analysis
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
             
+            // Clear output file before analysis
+            try
+            {
+                var fileWriter = new FileWriter();
+                fileWriter.ClearOutputFile("data/output.txt");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Warning: Could not clear output file: {ex.Message}");
+            }
+            
             // Ensure we have all required tables
-            var requiredTables = EnsureRequiredTables();
+            var requiredTables = EnsureRequiredTables("Sensitivity");
             if (!requiredTables.success)
             {
                 Console.WriteLine($"Error: {requiredTables.message}");
@@ -120,61 +137,20 @@ namespace LinearProgrammingSolver.Analysis
             Sensitivity.RunSensitivityAnalysis(requiredTables.optimalTable);
         }
 
-        private static void RunShadowPriceAnalysis()
-        {
-            try { Console.Clear(); } catch { /* Ignore clear failures */ }
-            
-            Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                        SHADOW PRICE ANALYSIS                                 ║");
-            Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
-            Console.WriteLine();
-            
-            // Ensure we have all required tables
-            var requiredTables = EnsureRequiredTables();
-            if (!requiredTables.success)
-            {
-                Console.WriteLine($"Error: {requiredTables.message}");
-                return;
-            }
-            
-            ExtractAndDisplayShadowPrices(requiredTables.optimalTable);
-        }
 
-        private static void ExtractAndDisplayShadowPrices(Table optimalTable)
+        private static (bool success, Table canonicalTable, Table optimalTable, string message) EnsureRequiredTables(string analysisType = "general")
         {
-            Console.WriteLine("Shadow Prices (Dual Variable Values):");
-            Console.WriteLine("=====================================");
+            Console.WriteLine($"Checking required tables for {analysisType} analysis...");
             
-            int objRow = 0;
-            var columnLabels = optimalTable.ColumnLabels;
-            
-            Console.WriteLine("Variable".PadRight(15) + "Shadow Price");
-            Console.WriteLine(new string('-', 30));
-            
-            for (int j = 0; j < optimalTable.GetColumnCount() - 1; j++)
+            // Analysis-specific requirements check
+            if (analysisType == "Duality")
             {
-                string varName = columnLabels[j];
-                double shadowPrice = 0.0;
-                
-                if (varName.StartsWith("s") || varName.StartsWith("e"))
-                {
-                    shadowPrice = optimalTable.GetElement(objRow, j);
-                    Console.WriteLine($"{varName.PadRight(15)}{shadowPrice:F6}");
-                }
+                Console.WriteLine("Required tables: Raw table → Canonical table → Optimal table");
             }
-            
-            Console.WriteLine();
-            Console.WriteLine("Note: Shadow prices represent the marginal value of relaxing constraints.");
-            Console.WriteLine("      Non-zero values indicate binding constraints.");
-        }
-
-        /// <summary>
-        /// Ensures all required tables exist for analysis. If missing, runs the appropriate pipeline.
-        /// Returns (success, canonicalTable, optimalTable, message).
-        /// </summary>
-        private static (bool success, Table canonicalTable, Table optimalTable, string message) EnsureRequiredTables()
-        {
-            Console.WriteLine("Checking required tables for analysis...");
+            else if (analysisType == "Sensitivity")
+            {
+                Console.WriteLine("Required tables: Raw table → Canonical table → Optimal table");
+            }
             
             // Check if we have a raw table (prerequisite for everything)
             var rawTable = TableCache.GetTable("t-raw");
@@ -183,7 +159,7 @@ namespace LinearProgrammingSolver.Analysis
                 return (false, null, null, "No input file loaded. Please load a file first using option 1 (Load Input File).");
             }
             
-            Console.WriteLine("✓ Raw table found");
+            Console.WriteLine("Raw table found");
             
             // Check for canonical table
             var canonicalTable = TableCache.GetTable("t-i");
@@ -198,7 +174,7 @@ namespace LinearProgrammingSolver.Analysis
                     {
                         return (false, null, null, "Failed to convert raw table to canonical form.");
                     }
-                    Console.WriteLine("✓ Canonical table created successfully");
+                    Console.WriteLine("Canonical table created successfully");
                 }
                 catch (Exception ex)
                 {
@@ -207,7 +183,7 @@ namespace LinearProgrammingSolver.Analysis
             }
             else
             {
-                Console.WriteLine("✓ Canonical table found");
+                Console.WriteLine("Canonical table found");
             }
             
             // Check for optimal table
@@ -225,7 +201,7 @@ namespace LinearProgrammingSolver.Analysis
                         return (false, null, null, "Primal Simplex algorithm failed to produce a solution.");
                     }
                     
-                    Console.WriteLine($"✓ Primal Simplex completed with status: {optimalTable.Status}");
+                    Console.WriteLine($"Primal Simplex completed with status: {optimalTable.Status}");
                 }
                 catch (Exception ex)
                 {
@@ -234,7 +210,7 @@ namespace LinearProgrammingSolver.Analysis
             }
             else
             {
-                Console.WriteLine("✓ Optimal table found");
+                Console.WriteLine("Optimal table found");
             }
             
             // Verify optimal table has correct status
@@ -243,7 +219,27 @@ namespace LinearProgrammingSolver.Analysis
                 return (false, null, null, $"Analysis requires an optimal solution. Current status: {optimalTable.Status}");
             }
             
-            Console.WriteLine("✓ All required tables available for analysis");
+            // Analysis-specific validation
+            if (analysisType == "Duality")
+            {
+                // Additional validation for duality analysis
+                if (canonicalTable.OptimizationType.ToString() != "Maximization")
+                {
+                    Console.WriteLine("! Note: Duality analysis works best with maximization problems");
+                }
+                Console.WriteLine("Duality analysis prerequisites satisfied: Canonical form + Optimal solution");
+            }
+            else if (analysisType == "Sensitivity")
+            {
+                // Additional validation for sensitivity analysis
+                if (optimalTable.BasicVariables == null || optimalTable.BasicVariables.Count == 0)
+                {
+                    return (false, null, null, "Sensitivity analysis requires basic variables information in optimal table");
+                }
+                Console.WriteLine("Sensitivity analysis prerequisites satisfied: Optimal solution with basic variables");
+            }
+            
+            Console.WriteLine("All required tables available for analysis");
             Console.WriteLine();
             
             return (true, canonicalTable, optimalTable, "Success");

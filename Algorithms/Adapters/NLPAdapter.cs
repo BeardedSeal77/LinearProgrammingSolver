@@ -63,52 +63,41 @@ namespace LinearProgrammingSolver.Algorithms.Adapters
 
         public void ExportResults(Table result, AlgorithmContext context)
         {
-            if (_result == null || context.NLPProblem == null) return;
+            // NLP export is handled by FileWriter in AlgorithmManager
+            // This method provides NLP-specific export functionality
+            if (_result == null || context.NLPProblem == null)
+            {
+                Console.WriteLine("No NLP results to export.");
+                return;
+            }
             
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(context.OutputPath));
-                
-                using (var writer = new StreamWriter(context.OutputPath))
-                {
-                    writer.WriteLine("=== NON-LINEAR PROGRAMMING RESULTS ===");
-                    writer.WriteLine($"Executed at: {DateTime.Now}");
-                    writer.WriteLine();
-                    
-                    writer.WriteLine("=== PROBLEM DEFINITION ===");
-                    writer.WriteLine($"Function: {context.NLPProblem.Function}");
-                    writer.WriteLine($"Starting Point: ({context.NLPProblem.StartingPoint.x}, {context.NLPProblem.StartingPoint.y})");
-                    writer.WriteLine();
-                    
-                    writer.WriteLine("=== SOLUTION ===");
-                    writer.WriteLine($"Critical Point: ({_result.OptimalPoint.x:F6}, {_result.OptimalPoint.y:F6})");
-                    writer.WriteLine($"Function Value: {_result.OptimalValue:F6}");
-                    writer.WriteLine($"Classification: {_result.PointType}");
-                    writer.WriteLine();
-                    
-                    writer.WriteLine("=== ANALYSIS ===");
-                    writer.WriteLine($"Gradient at optimal: ({_result.Dx:F6}, {_result.Dy:F6})");
-                    
-                    if (_result.HessianMatrix != null)
-                    {
-                        writer.WriteLine("Hessian matrix:");
-                        writer.WriteLine($"  [{_result.Dxx:F6}  {_result.Dxy:F6}]");
-                        writer.WriteLine($"  [{_result.Dyx:F6}  {_result.Dyy:F6}]");
-                        writer.WriteLine($"Determinant: {_result.HessianDeterminant:F6}");
-                        writer.WriteLine();
-                    }
-                    
-                    writer.WriteLine("=== ALGORITHM SUMMARY ===");
-                    writer.WriteLine("Method: Analytical optimization using calculus");
-                    writer.WriteLine("Approach: Find critical points via gradient analysis");
-                    writer.WriteLine("Classification: Second derivative test for optimization type");
-                }
-                
-                Console.WriteLine($"NLP results exported to {context.OutputPath}");
+                var fileWriter = new FileWriter();
+                fileWriter.WriteNLPResults(context.NLPProblem, _result, context.OutputPath);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error exporting NLP results: {ex.Message}");
+                Console.WriteLine($"Error exporting NLP results with FileWriter: {ex.Message}");
+                // Fallback export for NLP
+                try
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(context.OutputPath));
+                    
+                    using (var writer = new StreamWriter(context.OutputPath))
+                    {
+                        writer.WriteLine("=== NON-LINEAR PROGRAMMING RESULTS (FALLBACK) ===");
+                        writer.WriteLine($"Executed at: {DateTime.Now}");
+                        writer.WriteLine();
+                        writer.WriteLine($"Critical Point: ({_result.OptimalPoint.x:F6}, {_result.OptimalPoint.y:F6})");
+                        writer.WriteLine($"Function Value: {_result.OptimalValue:F6}");
+                    }
+                    Console.WriteLine($"NLP results exported to {context.OutputPath} (fallback mode)");
+                }
+                catch (Exception fallbackEx)
+                {
+                    Console.WriteLine($"Fallback NLP export also failed: {fallbackEx.Message}");
+                }
             }
         }
     }

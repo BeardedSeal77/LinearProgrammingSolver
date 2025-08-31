@@ -1,0 +1,83 @@
+Jack is moving from Gauteng to Mpumalanga and has rented a truck that can haul up to 1 100 dm3 of 
+furniture. The volume and value of each item Jack is considering moving on the truck are given in the 
+table.  Which items should Jack bring to Mpumalanga?
+
+Item	Value (R 1000)	Volume (dm3)
+Bedroom set	60	800
+Dining Room set	48	600
+Stereo	14	300
+Sofa	31	400
+TV Set	10	200
+
+
+max z = 60x1 + 48x2 + 14x3 + 31x4 + 10x5				
+800x1 + 600x2 + 300x3 + 400x4 + 200x5 <= 1100				
+xi is binary				
+
+
+Step 1) Solver								
+	x1	x2	x3	x4	x5			
+max Z								
+obj	60	48	14	31	10	0	max	
+C1	12	2	1	1	4	0	<=	1100
+
+
+Step 2) Ratio Table								
+	Item	Value (R 1000)	Volume (dm³)	Ratio (Value/Volume)	Ratio	Rank		
+								
+x1	Bedroom set	60	800	60/800	0.075	3		
+x2	Dining Room set	48	600	48/600	0.08	1		
+x3	Stereo	14	300	14/300	0.047	5		
+x4	Sofa	31	400	31/400	0.078	2		
+x5	TV Set	10	200	10/200	0.05	4		
+
+rank from highest to lowest
+
+Step 3) First Problem								
+Rank	Item	Value (R 1000)	Volume (dm³)	Include	Remaining Volume			
+								
+-	Starting Capacity	-	-		1,100			
+1	x2	48	600	1	500			
+2	x4	31	400	1	100			
+3	x1	60	800	0.125	100/800		since we run out, we now do remaining/consume	
+4	x5	10	200	0	-		so we are only using 1/8 of x1	
+5	x3	14	300	0	-			
+								
+	Z-Value	86  1/2 					for the Z-value, we do the value*include	
+		173/2					and since we are only including 1/8th of x1	
+							we do 60*1/8	
+
+
+Step 4) sub problems								
+since we have x1 = 1/8, we create 2 sub problems, x=0 and x=1, move it to the top of our selection table								
+
+
+Sub-P 1: x1=0						
+Rank	Item	Value (R 1000)	Volume (dm³)	Include	Remaining Volume	
+						
+-	Starting Capacity	-	-		1,100	
+3	x1	60	800	0	1,100	100/800
+1	x2	48	600	1	500	
+2	x4	31	400	1	100	
+4	x5	10	200	0.5	100/200	
+5	x3	14	300	0		
+						
+	Z-Value	84      				
+		173/2				
+						
+			next sub problem, x5 = 0, x5 = 1			
+
+
+Sub-P 2: x1=1						
+Rank	Item	Value (R 1000)	Volume (dm³)	Include	Remaining Volume	
+						
+-	Starting Capacity	-	-		1,100	
+3	x1	60	800	1	300	100/800
+1	x2	48	600	0.5	300/600	
+2	x4	31	400	0		
+4	x5	10	200	0	-	
+5	x3	14	300	0	-	
+						
+	Z-Value	84      				
+		173/2				
+			next sub problem, x2 = 0, x2 = 1			

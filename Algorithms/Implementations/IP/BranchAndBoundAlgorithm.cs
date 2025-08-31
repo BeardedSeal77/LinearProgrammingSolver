@@ -69,7 +69,6 @@ namespace LinearProgrammingSolver.Algorithms.Implementations.IP
                 if (currentNode.TableId.Contains("-B") && !currentNode.TableId.Contains("-A"))
                 {
                     bool isFeasible = _dualSimplex.IsFeasible(currentNode);
-                    _processingOrder.Add($"  DEBUG: Table {currentNode.TableId} is feasible: {isFeasible}");
                     
                     // Show RHS values
                     int rhsCol = currentNode.GetColumnCount() - 1;
@@ -78,7 +77,6 @@ namespace LinearProgrammingSolver.Algorithms.Implementations.IP
                     {
                         rhsValues.Add($"R{i}:{currentNode.GetElement(i, rhsCol):F3}");
                     }
-                    _processingOrder.Add($"  DEBUG: RHS values: {string.Join(", ", rhsValues)}");
                 }
                 
                 Table solvedNode = _dualSimplex.SolveLP(currentNode);
@@ -87,14 +85,12 @@ namespace LinearProgrammingSolver.Algorithms.Implementations.IP
                 // Debug: Show final table for B1-A1 case
                 if (solvedNode.TableId.Contains("B1-A1"))
                 {
-                    _processingOrder.Add($"  DEBUG: Final table {solvedNode.TableId}:");
                     var tableLines = solvedNode.ToString().Split('\n');
                     foreach (var line in tableLines)
                     {
                         if (!string.IsNullOrWhiteSpace(line))
                             _processingOrder.Add($"    {line}");
                     }
-                    _processingOrder.Add($"  DEBUG: Basic variables:");
                     for (int i = 0; i < solvedNode.BasicVariables.Count; i++)
                     {
                         var varName = solvedNode.BasicVariables[i];
@@ -132,7 +128,6 @@ namespace LinearProgrammingSolver.Algorithms.Implementations.IP
                 // Debug: Show the table before branching
                 if (solvedNode.TableId.Contains("B1"))
                 {
-                    _processingOrder.Add($"  DEBUG: Table {solvedNode.TableId} before branching:");
                     var tableLines = solvedNode.ToString().Split('\n');
                     foreach (var line in tableLines)
                     {
@@ -141,7 +136,6 @@ namespace LinearProgrammingSolver.Algorithms.Implementations.IP
                     }
                     
                     // Show the basic variables explicitly
-                    _processingOrder.Add($"  DEBUG: Basic variables:");
                     for (int i = 0; i < solvedNode.BasicVariables.Count; i++)
                     {
                         var varName = solvedNode.BasicVariables[i];

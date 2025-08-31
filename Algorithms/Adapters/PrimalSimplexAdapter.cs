@@ -87,67 +87,9 @@ namespace LinearProgrammingSolver.Algorithms.Adapters
 
         public void ExportResults(Table result, AlgorithmContext context)
         {
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(context.OutputPath));
-                
-                using (var writer = new StreamWriter(context.OutputPath))
-                {
-                    writer.WriteLine("=== PRIMAL SIMPLEX RESULTS ===");
-                    writer.WriteLine($"Executed at: {DateTime.Now}");
-                    writer.WriteLine();
-                    
-                    // Write canonical form
-                    var canonicalTable = TableCache.GetTable("t-i");
-                    if (canonicalTable != null)
-                    {
-                        writer.WriteLine("Canonical Form (t-i):");
-                        writer.WriteLine(canonicalTable.ToString());
-                        writer.WriteLine();
-                    }
-                    
-                    // Write all iterations
-                    var allTables = TableCache.GetAllTables()
-                        .Where(t => t.Status == "Iteration" || t.Status == "Optimal" || 
-                                   t.Status == "Infeasible" || t.Status == "Unbounded")
-                        .OrderBy(t => t.TableId);
-                    
-                    foreach (var table in allTables)
-                    {
-                        writer.WriteLine($"Table {table.TableId} ({table.Status}):");
-                        if (table.IsOptimal() || table.Status == "Infeasible" || table.Status == "Unbounded")
-                        {
-                            writer.WriteLine($"Objective Value: {table.GetObjectiveValue():F6}");
-                        }
-                        writer.WriteLine(table.ToString());
-                        writer.WriteLine();
-                    }
-                    
-                    // Final summary
-                    if (result != null)
-                    {
-                        writer.WriteLine("=== FINAL SOLUTION ===");
-                        writer.WriteLine($"Status: {result.Status}");
-                        if (result.IsOptimal())
-                        {
-                            writer.WriteLine($"Objective Value: {result.GetObjectiveValue():F6}");
-                            writer.WriteLine("Basic Variables:");
-                            for (int i = 0; i < result.BasicVariables.Count; i++)
-                            {
-                                var varName = result.BasicVariables[i];
-                                var value = result.GetElement(i + 1, result.GetColumnCount() - 1);
-                                writer.WriteLine($"  {varName} = {value:F6}");
-                            }
-                        }
-                    }
-                }
-                
-                Console.WriteLine($"Results exported to {context.OutputPath}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error exporting results: {ex.Message}");
-            }
+            // Export is now handled by FileWriter in AlgorithmManager
+            // This method serves as a fallback only
+            Console.WriteLine("Export handled by FileWriter in AlgorithmManager");
         }
     }
 }

@@ -8,34 +8,38 @@ using LinearProgrammingSolver.Algorithms.Core;
 
 namespace LinearProgrammingSolver.Algorithms.Adapters
 {
-    public class BranchAndBoundAdapter : IFullAlgorithm
+    public class KnapsackAdapter : IFullAlgorithm
     {
-        private BranchAndBoundAlgorithm _algorithm;
+        private KnapsackAlgorithm _algorithm;
 
-        public string Name => "Branch & Bound Simplex";
-        public string Description => "Integer programming via branch and bound with simplex";
+        public string Name => "Knapsack Branch & Bound";
+        public string Description => "0-1 Knapsack problem solved via branch and bound";
         public ProblemType[] SupportedTypes => new[] { ProblemType.LinearProgramming };
-        public string[] RequiredTables => new[] { "t-i", "t-optimal" };
+        public string[] RequiredTables => new[] { "t-raw" }; // Only needs raw input
 
         public Table Execute(AlgorithmContext context)
         {
-            _algorithm = new BranchAndBoundAlgorithm();
-            var optimalTable = TableCache.GetTable("t-optimal");
+            _algorithm = new KnapsackAlgorithm();
             
-            Console.WriteLine($"Using optimal LP solution with objective value: {optimalTable.GetObjectiveValue():F3}");
+            // Use the raw table directly for knapsack
+            var rawTable = context.RawTable ?? TableCache.GetTable("t-raw");
+            if (rawTable == null)
+            {
+                Console.WriteLine("Error: No raw table available for knapsack problem");
+                return null;
+            }
+
+            Console.WriteLine("Using raw problem formulation for knapsack solving...");
             Console.WriteLine();
-            
-            Console.WriteLine("Starting Branch & Bound Integer Programming...");
-            Console.WriteLine();
-            
-            var result = _algorithm.SolveIP(optimalTable);
+
+            var result = _algorithm.SolveKnapsack(rawTable);
             
             if (result != null)
             {
-                result.TableId = "bb-final";
+                result.TableId = "knapsack-final";
                 TableCache.StoreTable(result);
             }
-            
+
             return result;
         }
 
@@ -43,7 +47,7 @@ namespace LinearProgrammingSolver.Algorithms.Adapters
         {
             Console.Clear();
             Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
-            Console.WriteLine("║                      EXECUTING BRANCH & BOUND SIMPLEX                        ║");
+            Console.WriteLine("║                      EXECUTING KNAPSACK BRANCH & BOUND                       ║");
             Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
             Console.WriteLine();
         }
@@ -56,51 +60,53 @@ namespace LinearProgrammingSolver.Algorithms.Adapters
                 return;
             }
 
+            Console.WriteLine();
+            Console.WriteLine("=== KNAPSACK BRANCH & BOUND RESULTS ===");
+
             // Display processing log
-            Console.WriteLine("=== BRANCH & BOUND PROCESSING LOG ===");
+            Console.WriteLine();
+            Console.WriteLine("=== PROCESSING ORDER ===");
             var processingOrder = _algorithm.GetProcessingOrder();
             foreach (var logEntry in processingOrder)
             {
                 Console.WriteLine(logEntry);
             }
-            
+
             // Display fathoming reasons
-            Console.WriteLine("\n=== FATHOMING REASONS ===");
+            Console.WriteLine();
+            Console.WriteLine("=== FATHOMING REASONS ===");
             var fathomReasons = _algorithm.GetFathomReasons();
             foreach (var kvp in fathomReasons)
             {
                 Console.WriteLine($"{kvp.Key}: {kvp.Value}");
             }
-            
-            // Display best integer solution
-            Console.WriteLine("\n=== BEST INTEGER SOLUTION ===");
+
+            // Display best solution
+            Console.WriteLine();
+            Console.WriteLine("=== OPTIMAL KNAPSACK SOLUTION ===");
             if (result != null)
             {
-                Console.WriteLine("Integer solution found!");
+                Console.WriteLine("Knapsack problem solved successfully!");
                 Console.WriteLine($"Table ID: {result.TableId}");
-                Console.WriteLine($"Objective Value: {result.GetObjectiveValue():F3}");
-                Console.WriteLine("Basic variables and values:");
-                for (int i = 0; i < result.BasicVariables.Count; i++)
-                {
-                    var varName = result.BasicVariables[i];
-                    var value = result.GetElement(i + 1, result.GetColumnCount() - 1);
-                    Console.WriteLine($"  {varName} = {value:F3}");
-                }
+                Console.WriteLine($"Status: {result.Status}");
+                Console.WriteLine($"Optimal Value: {result.GetElement(0, 0):F3}");
                 
-                Console.WriteLine("\nFinal Tableau:");
-                result.DisplayTraditional();
+                Console.WriteLine();
+                Console.WriteLine("Solution details displayed during algorithm execution above.");
             }
             else
             {
-                Console.WriteLine("No integer solution found!");
+                Console.WriteLine("No feasible solution found!");
             }
-            
+
             // Display summary
             var allSubproblems = _algorithm.GetAllSubproblems();
-            Console.WriteLine($"\n=== SUMMARY ===");
+            Console.WriteLine();
+            Console.WriteLine("=== SUMMARY ===");
             Console.WriteLine($"Total subproblems generated: {allSubproblems.Count}");
             Console.WriteLine($"Processing steps: {processingOrder.Count}");
             Console.WriteLine($"Fathomed nodes: {fathomReasons.Count}");
+            Console.WriteLine("Knapsack Branch & Bound completed.");
         }
 
         public void ExportResults(Table result, AlgorithmContext context)

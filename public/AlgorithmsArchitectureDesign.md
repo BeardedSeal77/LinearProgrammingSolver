@@ -507,6 +507,7 @@ Algorithms/
 │   ├── PrimalSimplexAdapter.cs    # Simplex interface wrapper
 │   ├── BranchAndBoundAdapter.cs   # Branch & Bound interface wrapper  
 │   ├── CuttingPlaneAdapter.cs     # Cutting Plane interface wrapper
+│   ├── KnapsackAdapter.cs         # Knapsack interface wrapper
 │   └── NLPAdapter.cs              # NLP interface wrapper
 │
 ├── Implementations/               # Pure algorithm logic
@@ -517,6 +518,7 @@ Algorithms/
 │   ├── IP/                        # Integer Programming algorithms  
 │   │   ├── BranchAndBoundAlgorithm.cs
 │   │   ├── CuttingPlaneAlgorithm.cs
+│   │   ├── KnapsackAlgorithm.cs
 │   │   ├── BranchingVariableInfo.cs
 │   │   └── BranchAndBoundKnapsackAlgorithm.cs (stub - excluded from build)
 │   └── NLP/                       # Non-Linear Programming algorithms

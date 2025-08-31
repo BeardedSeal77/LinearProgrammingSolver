@@ -329,7 +329,7 @@ namespace LinearProgrammingSolver.Tables
         // Get the constraint operator symbol for a given row.
         // rowLabel: Row label (e.g., "OBJ", "C1", "C2")
         // Returns: Operator symbol ("=", "<=", ">=") or empty for objective row
-        private string GetConstraintOperatorSymbol(string rowLabel)
+        public string GetConstraintOperatorSymbol(string rowLabel)
         {
             if (rowLabel == "OBJ")
                 return "="; // Objective is always equality

@@ -1,5 +1,63 @@
-Canonical Form:
-Table t-i (Canonical) - 4x6
+=== KNAPSACK BRANCH & BOUND RESULTS ===
+Executed at: 31/08/2025 14:44:32
 
-Table t-optimal (Infeasible):
-Table t-optimal (Infeasible) - 4x6
+=== COMPLETE TABLE CACHE CONTENTS ===
+Total Tables in Cache: 4
+
+
+=== Table: t-raw ===
+Status: Raw
+Optimization: Maximize
+
+Tableau Matrix:
+            x1      x2  Op     RHS
+      ----------------------------
+  OBJ |   8.000   5.000   =   0.000
+   C1 |   1.000   1.000  <=   6.000
+   C2 |   9.000   5.000  <=  45.000
+Objective Value: 0.000
+
+================================================================================
+
+
+=== Table: t-i ===
+Status: Canonical
+Optimization: Maximize
+Basic Variables: [s1, s2]
+
+Tableau Matrix:
+            x1      x2      s1      s2  Op     RHS
+      --------------------------------------------
+  OBJ |  -8.000  -5.000   0.000   0.000   =   0.000
+   C1 |   1.000   1.000   1.000   0.000   =   6.000
+   C2 |   9.000   5.000   0.000   1.000   =  45.000
+Objective Value: 0.000
+
+================================================================================
+
+
+=== Table: knapsack-final ===
+Status: Optimal_Integer
+Optimization: Maximize
+
+Tableau Matrix:
+         Value
+      --------
+    Z |   =  13.000
+Objective Value: 13.000
+
+================================================================================
+
+
+=== Table: knapsack-final ===
+Status: Optimal_Integer
+Optimization: Maximize
+
+Tableau Matrix:
+         Value
+      --------
+    Z |   =  13.000
+Objective Value: 13.000
+
+=== END OF TABLE CACHE ===
+

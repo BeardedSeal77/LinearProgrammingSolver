@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using LinearProgrammingSolver.Tables;
 using LinearProgrammingSolver.Utils;
 using LinearProgrammingSolver.Algorithms.Implementations.LP;
@@ -10,6 +11,15 @@ namespace LinearProgrammingSolver.Analysis
     public static class Duality
     {
         public static void RunDualityAnalysis(Table canonicalTable, Table optimalTable)
+        {
+            // Perform analysis and display to console
+            PerformDualityAnalysis(canonicalTable, optimalTable);
+            
+            // Export analysis results to file
+            ExportDualityAnalysis(canonicalTable, optimalTable);
+        }
+
+        public static void PerformDualityAnalysis(Table canonicalTable, Table optimalTable)
         {
             Console.WriteLine("DUALITY ANALYSIS");
             Console.WriteLine("================");
@@ -260,6 +270,98 @@ namespace LinearProgrammingSolver.Analysis
             Console.WriteLine("ECONOMIC INTERPRETATION:");
             Console.WriteLine("Shadow prices represent the marginal value of relaxing constraints.");
             Console.WriteLine("Dual variables represent the value of resources in the optimal solution.");
+        }
+
+        public static void ExportDualityAnalysis(Table canonicalTable, Table optimalTable)
+        {
+            try
+            {
+                var fileWriter = new FileWriter();
+                var content = GenerateDualityAnalysisContent(canonicalTable, optimalTable);
+                fileWriter.WriteAnalysisResults("DUALITY ANALYSIS", content, "data/output.txt");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting Duality Analysis: {ex.Message}");
+            }
+        }
+
+        private static string GenerateDualityAnalysisContent(Table canonicalTable, Table optimalTable)
+        {
+            var sb = new StringBuilder();
+            
+            sb.AppendLine("Step 1: Primal Problem (Canonical Form)");
+            sb.AppendLine("---------------------------------------");
+            sb.AppendLine($"Status: {canonicalTable.Status}");
+            sb.AppendLine($"Optimization: {canonicalTable.OptimizationType}");
+            sb.AppendLine("Canonical Form Table:");
+            sb.AppendLine(canonicalTable.ToString());
+            sb.AppendLine();
+
+            sb.AppendLine("Step 2: Primal Optimal Solution");
+            sb.AppendLine("-------------------------------");
+            sb.AppendLine($"Status: {optimalTable.Status}");
+            sb.AppendLine("Optimal Table:");
+            sb.AppendLine(optimalTable.ToString());
+            sb.AppendLine();
+
+            double primalObjectiveValue = ExtractPrimalObjectiveValue(optimalTable);
+            sb.AppendLine($"Primal Objective Value (Z): {primalObjectiveValue:F6}");
+            sb.AppendLine();
+
+            sb.AppendLine("Step 3: Shadow Prices from Optimal Tableau");
+            sb.AppendLine("------------------------------------------");
+            var shadowPrices = ExtractShadowPrices(optimalTable);
+            foreach (var kvp in shadowPrices)
+            {
+                sb.AppendLine($"{kvp.Key}: {kvp.Value:F6}");
+            }
+            sb.AppendLine();
+
+            sb.AppendLine("Step 4: Dual Problem Construction");
+            sb.AppendLine("---------------------------------");
+            var dualTable = ConstructDualProblem(canonicalTable);
+            sb.AppendLine("Dual Problem Table:");
+            sb.AppendLine(dualTable.ToString());
+            sb.AppendLine();
+
+            sb.AppendLine("Step 5: Dual Problem Solution");
+            sb.AppendLine("-----------------------------");
+            var primalSimplex = new PrimalSimplexAlgorithm();
+            var dualOptimal = primalSimplex.SolveLP(dualTable);
+            
+            if (dualOptimal != null && dualOptimal.Status == "Optimal")
+            {
+                sb.AppendLine("Dual Optimal Table:");
+                sb.AppendLine(dualOptimal.ToString());
+                sb.AppendLine();
+
+                double dualObjectiveValue = ExtractDualObjectiveValue(dualOptimal);
+                sb.AppendLine($"Dual Objective Value (W): {dualObjectiveValue:F6}");
+                sb.AppendLine();
+
+                sb.AppendLine("Step 6: Duality Verification");
+                sb.AppendLine("----------------------------");
+                sb.AppendLine($"Primal Objective: {primalObjectiveValue:F6}");
+                sb.AppendLine($"Dual Objective: {dualObjectiveValue:F6}");
+                sb.AppendLine($"Difference: {Math.Abs(primalObjectiveValue - dualObjectiveValue):F6}");
+                
+                if (Math.Abs(primalObjectiveValue - dualObjectiveValue) < 1e-6)
+                {
+                    sb.AppendLine("✓ Strong Duality Theorem verified: Primal = Dual");
+                }
+                else
+                {
+                    sb.AppendLine("⚠ Duality gap detected - may indicate numerical errors");
+                }
+            }
+            else
+            {
+                sb.AppendLine("Error: Could not solve dual problem optimally.");
+                sb.AppendLine($"Dual Status: {dualOptimal?.Status ?? "Unknown"}");
+            }
+
+            return sb.ToString();
         }
     }
 }

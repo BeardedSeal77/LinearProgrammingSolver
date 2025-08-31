@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using LinearProgrammingSolver.Tables;
 using LinearProgrammingSolver.Utils;
 using LinearProgrammingSolver.Algorithms.Adapters;
@@ -34,7 +35,7 @@ namespace LinearProgrammingSolver.Algorithms.Core
                 ProblemType = problemType,
                 RawTable = rawTable,
                 NLPProblem = nlpProblem,
-                OutputPath = "data/output.txt"
+                OutputPath = GetAbsoluteOutputPath()
             };
             
             _pipeline = new AlgorithmPipeline(_context);
@@ -44,6 +45,7 @@ namespace LinearProgrammingSolver.Algorithms.Core
             {
                 { AlgorithmOption.PrimalSimplex, () => new PrimalSimplexAdapter() },
                 { AlgorithmOption.BranchBoundSimplex, () => new BranchAndBoundAdapter() },
+                { AlgorithmOption.BranchBoundKnapsack, () => new KnapsackAdapter() },
                 { AlgorithmOption.CuttingPlane, () => new CuttingPlaneAdapter() },
                 { AlgorithmOption.NonLinearProgramming, () => new NLPAdapter() },
                 // Revised Primal Simplex uses same adapter as Primal for now
@@ -85,12 +87,8 @@ namespace LinearProgrammingSolver.Algorithms.Core
                             continue;
                         }
                         
-                        // Handle special cases
-                        if (selectedOption == AlgorithmOption.BranchBoundKnapsack)
-                        {
-                            HandleUnsupportedAlgorithm("Branch & Bound Knapsack");
-                            continue;
-                        }
+                        // Handle special cases for unsupported algorithms
+                        // (Currently all algorithms are implemented)
                         
                         // Execute the selected algorithm
                         lastResult = ExecuteAlgorithm(selectedOption);
@@ -148,6 +146,13 @@ namespace LinearProgrammingSolver.Algorithms.Core
                     return null;
                 }
 
+                // Clear output file and algorithm tables before execution
+                var fileWriter = new FileWriter();
+                fileWriter.ClearOutputFile(_context.OutputPath);
+                
+                // Clear only algorithm-generated tables, preserving input tables (t-raw, t-i)
+                TableCache.ClearAlgorithmTables();
+                
                 // Display algorithm header
                 algorithm.DisplayHeader();
                 
@@ -159,8 +164,8 @@ namespace LinearProgrammingSolver.Algorithms.Core
                     // Show results using algorithm-specific UI
                     algorithm.ShowResults(result.ResultTable, _context);
                     
-                    // Export results
-                    algorithm.ExportResults(result.ResultTable, _context);
+                    // Export results using FileWriter based on algorithm type
+                    ExportResultsUsingFileWriter(algorithm, result.ResultTable);
                     
                     // Display table cache summary
                     Console.WriteLine();
@@ -246,6 +251,38 @@ namespace LinearProgrammingSolver.Algorithms.Core
             return _context;
         }
 
+        // Export results using FileWriter based on algorithm type
+        private void ExportResultsUsingFileWriter(IAlgorithm algorithm, Table resultTable)
+        {
+            var fileWriter = new FileWriter();
+            
+            try
+            {
+                if (algorithm.Name == "Non-Linear Programming")
+                {
+                    // Handle NLP results (non-TableCache) - let adapter handle it
+                    ((IFullAlgorithm)algorithm).ExportResults(resultTable, _context);
+                    return;
+                }
+                
+                // Handle TableCache-based algorithms - FileWriter uses static TableCache
+                fileWriter.WriteTableCacheToFile(algorithm.Name, _context.OutputPath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error exporting results with FileWriter: {ex.Message}");
+                // Fallback to algorithm-specific export
+                try
+                {
+                    ((IFullAlgorithm)algorithm).ExportResults(resultTable, _context);
+                }
+                catch (Exception fallbackEx)
+                {
+                    Console.WriteLine($"Fallback export also failed: {fallbackEx.Message}");
+                }
+            }
+        }
+
         // Execute algorithm with pipeline integration
         private AlgorithmResult ExecuteWithPipeline(IAlgorithm algorithm)
         {
@@ -294,6 +331,20 @@ namespace LinearProgrammingSolver.Algorithms.Core
             {
                 return AlgorithmResult.CreateFailure($"Error executing {algorithm.Name}: {ex.Message}", ex);
             }
+        }
+
+        // Gets absolute path to output file relative to executable location
+        private string GetAbsoluteOutputPath()
+        {
+            // Get the directory where the executable is located
+            string executableDir = AppDomain.CurrentDomain.BaseDirectory;
+            
+            // Create data directory next to the executable
+            string dataDir = Path.Combine(executableDir, "data");
+            Directory.CreateDirectory(dataDir);
+            
+            string absolutePath = Path.Combine(dataDir, "output.txt");
+            return absolutePath;
         }
     }
 }

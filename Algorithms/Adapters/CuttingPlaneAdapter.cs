@@ -65,80 +65,9 @@ namespace LinearProgrammingSolver.Algorithms.Adapters
 
         public void ExportResults(Table result, AlgorithmContext context)
         {
-            if (_algorithm == null) return;
-            
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(context.OutputPath));
-                
-                using (var writer = new StreamWriter(context.OutputPath))
-                {
-                    writer.WriteLine("=== CUTTING PLANE ALGORITHM RESULTS ===");
-                    writer.WriteLine($"Executed at: {DateTime.Now}");
-                    writer.WriteLine();
-                    
-                    // Write LP optimal solution
-                    var lpOptimal = TableCache.GetTable("t-optimal");
-                    if (lpOptimal != null)
-                    {
-                        writer.WriteLine("=== LP RELAXATION OPTIMAL SOLUTION ===");
-                        writer.WriteLine($"Table ID: {lpOptimal.TableId}");
-                        writer.WriteLine($"Objective Value: {lpOptimal.GetObjectiveValue():F3}");
-                        writer.WriteLine(lpOptimal.ToString());
-                        writer.WriteLine();
-                    }
-                    
-                    // Write cutting iterations (all tables with "cut" in the name)
-                    writer.WriteLine("=== CUTTING PLANE ITERATIONS ===");
-                    var cutTables = TableCache.GetAllTables()
-                        .Where(t => t.TableId.Contains("cut") || t.TableId.Contains("gomory"))
-                        .OrderBy(t => t.TableId);
-                    
-                    foreach (var table in cutTables)
-                    {
-                        writer.WriteLine($"Table {table.TableId} ({table.Status}):");
-                        writer.WriteLine($"Objective Value: {table.GetObjectiveValue():F6}");
-                        writer.WriteLine(table.ToString());
-                        writer.WriteLine();
-                    }
-                    
-                    // Write final solution
-                    writer.WriteLine("=== FINAL SOLUTION ===");
-                    if (result != null)
-                    {
-                        writer.WriteLine($"Table ID: {result.TableId}");
-                        writer.WriteLine($"Status: {result.Status}");
-                        writer.WriteLine($"Objective Value: {result.GetObjectiveValue():F6}");
-                        writer.WriteLine("Basic variables and values:");
-                        for (int i = 0; i < result.BasicVariables.Count; i++)
-                        {
-                            var varName = result.BasicVariables[i];
-                            var value = result.GetElement(i + 1, result.GetColumnCount() - 1);
-                            writer.WriteLine($"  {varName} = {value:F6}");
-                        }
-                        writer.WriteLine();
-                        writer.WriteLine("Final Table:");
-                        writer.WriteLine(result.ToString());
-                        writer.WriteLine();
-                    }
-                    else
-                    {
-                        writer.WriteLine("No solution found!");
-                    }
-                    
-                    // Algorithm summary
-                    writer.WriteLine("=== ALGORITHM SUMMARY ===");
-                    writer.WriteLine("Method: Iterative Gomory Cutting Plane Algorithm");
-                    writer.WriteLine("Approach: Generate cutting planes to eliminate fractional solutions");
-                    writer.WriteLine("Termination: Early stop on no improvement or maximum cuts reached");
-                }
-                
-                Console.WriteLine($"Cutting Plane results exported to {context.OutputPath}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error exporting Cutting Plane results: {ex.Message}");
-            }
+            // Export is now handled by FileWriter in AlgorithmManager
+            // This method serves as a fallback only
+            Console.WriteLine("Export handled by FileWriter in AlgorithmManager");
         }
     }
 }
